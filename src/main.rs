@@ -1,41 +1,44 @@
-use dotenv::dotenv;
-use module_validator::{Config, ModuleRegistry};
-use module_validator::modules::inference_module::InferenceModule;
-use std::env;
-use tokio;
 use std::error::Error;
+use tokio;
 use pyo3::prelude::*;
-use pyo3::types::IntoPyDict;
+use std::env;
+
+mod subnet_module;
+use subnet_module::SubnetModule;
+
+#[derive(Debug)]
+pub struct CustomError(String);
+
+impl std::fmt::Display for CustomError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl Error for CustomError {}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    // Load .env file
-    dotenv().ok();
+    // Get the current directory as the root path
+    let root_path = env::current_dir()?;
 
-    // Load configuration
-    let _config = Config::from_file("config.yaml")?;
+    // Perform async operations
+    let module = SubnetModule::new(
+        "sylliba_subnet",
+        "https://github.com/example/sylliba_subnet",
+        root_path.to_str().unwrap()
+    );
+    module.install().await?;
 
-    // Get database URL from environment variable
-    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    // Perform sync operations in a separate thread
+    tokio::task::spawn_blocking(|| {
+        handle_python_operations()
+    }).await??;
 
-    // Create ModuleRegistry
-    let mut registry = ModuleRegistry::new(&database_url).await?;
+    Ok(())
+}
 
-    // Register InferenceModule
-    registry.register_module("inference".to_string(), "inference_module").await?;
-
-    // Install Inference Module
-    let inference_module = InferenceModule::new("inference");
-    inference_module.install()?;
-
-    // Use InferenceModule
-    let processed_text = registry.process("inference", "Hello, world!").await?;
-    println!("Processed text: {}", processed_text);
-
-    // Unregister InferenceModule
-    registry.unregister_module("inference").await?;
-
-    // Create a new Python interpreter
+fn handle_python_operations() -> Result<(), CustomError> {
     Python::with_gil(|py| -> PyResult<()> {
         // Set up the Python path
         let sys = py.import("sys")?;
@@ -43,12 +46,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
         path.call_method1("append", (".",))?;
 
         // Import the module
-        let module = py.import("modules.module_wrapper")?;
+        let _module = py.import("modules.sylliba_subnet.module_wrapper")?;
         
         // Use the module...
 
         Ok(())
-    })?;
-
-    Ok(())
+    }).map_err(|e| CustomError(e.to_string()))
 }

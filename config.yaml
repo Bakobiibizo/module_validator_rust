@@ -1,0 +1,2 @@
+database_url: "postgres://module_validator_user:your_secure_password@localhost/module_validator"
+modules: []

@@ -6,11 +6,22 @@ use url::Url;
 use base64;
 use std::path::PathBuf;
 
+/// Represents an inference module that can be installed and managed.
 pub struct InferenceModule {
+    /// The name of the inference module.
     pub name: String,
 }
 
 impl InferenceModule {
+    /// Creates a new InferenceModule instance.
+    ///
+    /// # Arguments
+    ///
+    /// * `url` - A string slice that holds the URL of the module to be installed.
+    ///
+    /// # Returns
+    ///
+    /// * `Result<Self, Box<dyn Error>>` - Returns an InferenceModule instance if successful, or an error if the URL is invalid.
     pub fn new(url: &str) -> Result<Self, Box<dyn Error>> {
         let parsed_url = Url::parse(url)?;
         let name = parsed_url.path_segments()
@@ -21,6 +32,19 @@ impl InferenceModule {
         Ok(InferenceModule { name })
     }
 
+    /// Installs the inference module.
+    ///
+    /// This function performs the following steps:
+    /// 1. Downloads the module script from the server.
+    /// 2. Decodes the script content if it's base64 encoded.
+    /// 3. Saves the script to the appropriate directory.
+    /// 4. Creates a Python virtual environment if it doesn't exist.
+    /// 5. Runs the setup script in the virtual environment.
+    /// 6. Executes any additional installation scripts.
+    ///
+    /// # Returns
+    ///
+    /// * `Result<(), Box<dyn Error>>` - Returns Ok(()) if the installation is successful, or an error if any step fails.
     pub async fn install(&self) -> Result<(), Box<dyn Error>> {
         println!("Installing inference module: {}", self.name);
 

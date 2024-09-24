@@ -1,3 +1,6 @@
 target
 .env
-
+modules/translation
+.venv
+venv
+submodules/sylliba_subnet

@@ -839,6 +839,7 @@ name = "module_validator"
 version = "0.1.0"
 dependencies = [
  "async-trait",
+ "base64 0.13.1",
  "config",
  "dotenv",
  "env_logger",
@@ -846,9 +847,11 @@ dependencies = [
  "pyo3",
  "reqwest",
  "serde",
+ "serde_json",
  "serde_yaml",
  "sqlx",
  "tokio",
+ "url",
 ]
 
 [[package]]

@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use crate::registry::Module;
 
-const API_URL: &str = "https://registrar-cellium.ngrok.app/api/translation/";
+const API_URL: &str = "https://registrar-agentartificial.ngrok.dev/modules/translation";
 
 #[derive(Debug, Serialize, Deserialize)]
 struct TranslationRequest {
@@ -34,7 +34,7 @@ impl TranslationModule {
             target_language: target_lang.to_string(),
         };
 
-        let response = self.client.post(API_URL)
+        let response = self.client.get(API_URL)
             .json(&request)
             .send()
             .await?

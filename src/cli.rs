@@ -28,4 +28,9 @@ pub enum Commands {
         /// Name of the module to uninstall
         name: String,
     },
+    /// Parse and display the configuration of an installed module
+    ParseConfig {
+        /// Name of the module to parse
+        name: String,
+    },
 }

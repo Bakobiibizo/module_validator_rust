@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS modules (
 );
 
 CREATE INDEX IF NOT EXISTS idx_modules_name ON modules(name);
+ALTER TABLE modules ADD COLUMN IF NOT EXISTS module_type VARCHAR(50);
 EOF
 
 echo "Database setup completed successfully."

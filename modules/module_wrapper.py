@@ -4,7 +4,7 @@ from pathlib import Path
 import sys
 import os
 
-CWD = Path.cwd("./")
+CWD = Path.cwd()
 
 class ModuleWrapper:
     def __init__(self, module_name):

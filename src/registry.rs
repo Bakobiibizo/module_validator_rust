@@ -3,6 +3,8 @@ use sqlx::postgres::{PgPool, PgRow};
 use sqlx::Row;
 use std::collections::HashMap;
 use std::error::Error as StdError;
+use crate::modules::{inference_module::InferenceModule, subnet_module::SubnetModule};
+use url::Url;
 
 pub struct ModuleRegistry {
     db: PgPool,
@@ -18,7 +20,7 @@ impl ModuleRegistry {
         })
     }
 
-    pub async fn register_module(&mut self, name: String, module_name: &str) -> Result<(), Box<dyn StdError>> {
+    pub async fn register_module(&mut self, name: String, module_type: &str, module_name: &str) -> Result<(), Box<dyn StdError>> {
         Python::with_gil(|py| -> Result<(), Box<dyn StdError>> {
             let sys = py.import("sys")?;
             sys.getattr("path")?.call_method1("append", ("./",))?;
@@ -32,8 +34,9 @@ impl ModuleRegistry {
 
         // Store module info in the database
         sqlx::query!(
-            "INSERT INTO modules (name) VALUES ($1) ON CONFLICT (name) DO NOTHING",
-            name
+            "INSERT INTO modules (name, module_type) VALUES ($1, $2) ON CONFLICT (name) DO UPDATE SET module_type = $2",
+            name,
+            module_type
         )
         .execute(&self.db)
         .await?;
@@ -108,5 +111,30 @@ impl ModuleRegistry {
         } else {
             Err("Module not found".into())
         }
+    }
+
+    pub async fn install_module(&self, url: &str) -> Result<(String, String), Box<dyn StdError>> {
+        let parsed_url = Url::parse(url)?;
+        let module_type = if parsed_url.host_str() == Some("github.com") {
+            "subnet"
+        } else {
+            "inference"
+        };
+
+        let module_name = match module_type {
+            "inference" => {
+                let inference_module = InferenceModule::new(url)?;
+                inference_module.install().await?;
+                inference_module.name
+            },
+            "subnet" => {
+                let subnet_module = SubnetModule::new(url)?;
+                subnet_module.install().await?;
+                subnet_module.name
+            },
+            _ => return Err("Invalid module type".into()),
+        };
+
+        Ok((module_name, module_type.to_string()))
     }
 }

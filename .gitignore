@@ -1,7 +1,9 @@
 target
 .env
 modules/translation
+modules/embedding
 .venv
 venv
-submodules/sylliba_subnet
+subnet/sylliba_subnet
+subnet/eden_subnet
 *__pycache__

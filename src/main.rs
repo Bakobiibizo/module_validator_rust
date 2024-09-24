@@ -4,7 +4,6 @@ mod cli;
 
 use dotenv::dotenv;
 use module_validator::{Config, ModuleRegistry};
-use crate::modules::inference_module::InferenceModule;
 use std::env;
 use cli::{Cli, Commands};
 
@@ -21,10 +20,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     match &cli.command {
         Commands::Install { url } => {
-            let inference_module = InferenceModule::new(url)?;
-            inference_module.install().await?;
-            registry.register_module(inference_module.name.clone(), &inference_module.name).await?;
-            println!("Module installed and registered successfully");
+            let (module_name, module_type) = registry.install_module(url).await?;
+            registry.register_module(module_name.clone(), &module_type, &module_name).await?;
+            println!("{} module installed and registered successfully", module_type);
         }
         Commands::List => {
             let modules = registry.list_modules().await?;

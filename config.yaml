@@ -1,2 +1,4 @@
 database_url: "postgres://module_validator_user:your_secure_password@localhost/module_validator"
 modules: []
+log_level: "info"
+max_concurrent_modules: 5

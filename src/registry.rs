@@ -1,5 +1,6 @@
 use pyo3::prelude::*;
-use sqlx::PgPool;
+use sqlx::postgres::{PgPool, PgRow};
+use sqlx::Row;
 use std::collections::HashMap;
 use std::error::Error as StdError;
 
@@ -36,6 +37,33 @@ impl ModuleRegistry {
         )
         .execute(&self.db)
         .await?;
+
+        Ok(())
+    }
+
+    pub async fn get_module(&self, name: &str) -> Result<Option<String>, Box<dyn StdError>> {
+        let result = sqlx::query("SELECT name FROM modules WHERE name = $1")
+            .bind(name)
+            .fetch_optional(&self.db)
+            .await?;
+
+        Ok(result.map(|row: PgRow| row.get("name")))
+    }
+
+    pub async fn list_modules(&self) -> Result<Vec<String>, Box<dyn StdError>> {
+        let results = sqlx::query("SELECT name FROM modules")
+            .fetch_all(&self.db)
+            .await?;
+
+        Ok(results.into_iter().map(|row: PgRow| row.get("name")).collect())
+    }
+
+    pub async fn update_module(&self, name: &str, new_name: &str) -> Result<(), Box<dyn StdError>> {
+        sqlx::query("UPDATE modules SET name = $1 WHERE name = $2")
+            .bind(new_name)
+            .bind(name)
+            .execute(&self.db)
+            .await?;
 
         Ok(())
     }

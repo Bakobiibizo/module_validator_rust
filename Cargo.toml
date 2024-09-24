@@ -18,3 +18,4 @@ dotenv = "0.15"
 pyo3 = { version = "0.18", features = ["auto-initialize"] }
 base64 = "0.13.0"
 url = "2.2"
+clap = { version = "3.0", features = ["derive"] }

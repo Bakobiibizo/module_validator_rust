@@ -1,30 +1,47 @@
+use clap::Parser;
+mod modules;
+mod cli;
+
 use dotenv::dotenv;
 use module_validator::{Config, ModuleRegistry};
 use crate::modules::inference_module::InferenceModule;
 use std::env;
-
-mod modules;
+use cli::{Cli, Commands};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     dotenv().ok();
+
+    let cli = Cli::parse();
 
     let _config = Config::from_file("config.yaml")?;
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
 
     let mut registry = ModuleRegistry::new(&database_url).await?;
 
-    // Use the full URL to create the InferenceModule
-    let inference_module = InferenceModule::new("https://registrar-agentartificial.ngrok.dev/modules/translation")?;
-    inference_module.install().await?;
-
-    // Use the name extracted from the URL to register the module
-    registry.register_module(inference_module.name.clone(), &inference_module.name).await?;
-
-    let processed_text = registry.process(&inference_module.name, "Hello, world!").await?;
-    println!("Processed text: {}", processed_text);
-
-    registry.unregister_module(&inference_module.name).await?;
+    match &cli.command {
+        Commands::Install { url } => {
+            let inference_module = InferenceModule::new(url)?;
+            inference_module.install().await?;
+            registry.register_module(inference_module.name.clone(), &inference_module.name).await?;
+            println!("Module installed and registered successfully");
+        }
+        Commands::List => {
+            let modules = registry.list_modules().await?;
+            println!("Installed modules:");
+            for module in modules {
+                println!("- {}", module);
+            }
+        }
+        Commands::Run { name, input } => {
+            let result = registry.process(name, input).await?;
+            println!("Result: {}", result);
+        }
+        Commands::Uninstall { name } => {
+            registry.unregister_module(name).await?;
+            println!("Module uninstalled successfully");
+        }
+    }
 
     Ok(())
 }

@@ -1,7 +1,10 @@
+#[cfg(test)]
+mod tests;
+
 mod config;
 mod registry;
 mod database;
-mod utils;
+pub mod utils;
 pub mod modules;
 
 pub use config::Config;

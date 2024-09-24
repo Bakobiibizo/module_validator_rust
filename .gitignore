@@ -4,4 +4,4 @@ modules/translation
 .venv
 venv
 submodules/sylliba_subnet
-__pycache__
+*__pycache__

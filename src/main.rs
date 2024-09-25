@@ -15,7 +15,7 @@ use std::env;
 use cli::{Cli, Commands};
 use std::path::Path;
 use dialoguer::MultiSelect;
-
+use std::path::PathBuf;
 use crate::config_parser::ConfigParser;
 use crate::modules::subnet_module::SubnetModule;
 use crate::modules::inference_module::InferenceModule;
@@ -97,17 +97,29 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("Module uninstalled successfully");
         }
         Commands::ParseConfig { name } => {
-            // Parse and display configuration for a specific module
-            let module_dir = Path::new("modules").join(name);
+            // Construct the full path to the module directory
+            let module_dir = PathBuf::from("subnets").join(name);
             if module_dir.exists() {
-                let mut config = ConfigParser::parse_commands(&module_dir)?;
-                ConfigParser::prompt_for_env_vars(&mut config)?;
-                println!("Parsed configuration for module '{}':", name);
-                print_config(&config);
+                println!("Parsing configuration for subnet module: {}", module_dir.display());
+                match ConfigParser::parse_commands(&module_dir) {
+                    Ok(mut config) => {
+                        // Configuration parsed successfully
+                        println!("Parsed configuration for module '{}':", name);
+                        print_config(&config);
+                        
+                        // Optionally, prompt for environment variables
+                        if let Err(e) = ConfigParser::prompt_for_env_vars(&mut config) {
+                            println!("Error prompting for environment variables: {}", e);
+                        }
+                    },
+                    Err(e) => {
+                        println!("Error parsing configuration: {}", e);
+                    }
+                }
             } else {
-                println!("Module '{}' not found", name);
+                println!("Module directory '{}' not found", module_dir.display());
             }
-        }
+        },
         Commands::LaunchValidator { name } => {
             // Launch validator for a subnet module
             let module_name = name.to_string();

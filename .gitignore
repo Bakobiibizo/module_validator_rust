@@ -2,8 +2,12 @@ target
 .env
 modules/translation
 modules/embedding
+.embedding
+.translation
 .venv
 venv
 subnet/sylliba-subnet
 subnet/eden-subnet
+.sylliba-subnet
+.eden-subnet
 *__pycache__

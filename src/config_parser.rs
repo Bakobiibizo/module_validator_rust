@@ -5,6 +5,7 @@ use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use dialoguer::Input;
+use std::io::Write;
 
 /// Represents the configuration of an argument in a command.
 #[derive(Debug, Serialize, Deserialize)]
@@ -170,6 +171,18 @@ impl ConfigParser {
                 .interact_text()?;
             *value = input;
         }
+        Ok(())
+    }
+
+    pub fn save_config(config: &ModuleConfig, module_dir: &Path) -> Result<(), Box<dyn Error>> {
+        let env_file_path = module_dir.join(".env");
+        let mut file = fs::File::create(env_file_path)?;
+
+        for (key, value) in &config.env_vars {
+            writeln!(file, "{}={}", key, value)?;
+        }
+
+        println!("Configuration saved to: {:?}", module_dir.join(".env"));
         Ok(())
     }
 }

@@ -97,19 +97,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("Module uninstalled successfully");
         }
         Commands::ParseConfig { name } => {
-            // Construct the full path to the module directory
             let module_dir = PathBuf::from("subnets").join(name);
+            println!("Attempting to parse config from: {:?}", module_dir);
             if module_dir.exists() {
-                println!("Parsing configuration for subnet module: {}", module_dir.display());
+                println!("Module directory found. Parsing configuration...");
                 match ConfigParser::parse_commands(&module_dir) {
                     Ok(mut config) => {
-                        // Configuration parsed successfully
-                        println!("Parsed configuration for module '{}':", name);
+                        println!("Successfully parsed configuration:");
                         print_config(&config);
-                        
-                        // Optionally, prompt for environment variables
+        
+                        // Prompt for environment variables
                         if let Err(e) = ConfigParser::prompt_for_env_vars(&mut config) {
                             println!("Error prompting for environment variables: {}", e);
+                        }
+        
+                        // Save the configuration
+                        match ConfigParser::save_config(&config, &module_dir) {
+                            Ok(_) => println!("Configuration saved successfully."),
+                            Err(e) => println!("Error saving configuration: {}", e),
                         }
                     },
                     Err(e) => {
@@ -117,15 +122,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     }
                 }
             } else {
-                println!("Module directory '{}' not found", module_dir.display());
+                println!("Module directory not found: {:?}", module_dir);
             }
         },
         Commands::LaunchValidator { name } => {
-            // Launch validator for a subnet module
+            // Launch the validator for a subnet module
             let module_name = name.to_string();
             let module_list = registry.list_modules().await?;
             if module_list.contains(&(module_name.clone(), "subnet".to_string())) {
-                let validator = Validator::new(name);
+                let mut validator = Validator::new(&name)?;
                 validator.launch()?;
             } else {
                 println!("'{}' is not a valid subnet module", name);

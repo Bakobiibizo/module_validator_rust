@@ -25,10 +25,8 @@ class ModuleWrapper:
             return self.module.unload()
         return "Module unloaded"
 
-    def process(self, *args, **kwargs):
-        if hasattr(self.module, "process"):
-            return self.module.process(*args, **kwargs)
-        elif (self.root_dir / "modules" / self.module_name / f"setup_{self.module_name}.sh").exists():
+    def install(self, *args, **kwargs):
+        if (self.root_dir / "modules" / self.module_name / f"setup_{self.module_name}.sh").exists():
             setup_script = self.root_dir / "modules" / self.module_name / f"setup_{self.module_name}.sh"
             command = ["bash", str(setup_script)]
             try:
@@ -46,3 +44,8 @@ class ModuleWrapper:
                 return f"Failed to setup module: {e}"
         else:
             return "Module setup failed"
+
+    def process(self, *args, **kwargs):
+        if hasattr(self.module, "process"):
+            return self.module.process(*args, **kwargs)
+        return "Module process failed"

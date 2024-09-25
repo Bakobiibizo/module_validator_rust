@@ -10,6 +10,7 @@ use std::path::PathBuf;
 pub struct InferenceModule {
     /// The name of the inference module.
     pub name: String,
+    pub root_dir: PathBuf,
 }
 
 impl InferenceModule {
@@ -28,8 +29,8 @@ impl InferenceModule {
             .and_then(|segments| segments.last())
             .ok_or("Invalid URL: cannot extract inference name")?
             .to_string();
-
-        Ok(InferenceModule { name })
+        let root_dir = PathBuf::from(".");
+        Ok(InferenceModule { name, root_dir })
     }
 
     /// Installs the inference module.
@@ -47,6 +48,7 @@ impl InferenceModule {
     /// * `Result<(), Box<dyn Error>>` - Returns Ok(()) if the installation is successful, or an error if any step fails.
     pub async fn install(&self) -> Result<(), Box<dyn Error>> {
         println!("Installing inference module: {}", self.name);
+        
 
         let url = format!("https://registrar-agentartificial.ngrok.dev/modules/{}", self.name);
         let response = reqwest::get(&url).await?.text().await?;
@@ -114,12 +116,13 @@ impl InferenceModule {
 
         println!("Python script executed successfully");
 
-        // Run the generated bash script
-        let bash_script_name = format!("install_{}.sh", self.name);
-        let bash_script_path = module_dir.join(&bash_script_name);
+        let bash_script_path = self.root_dir.join("modules").join(self.name.clone()).join(format!("install_{}.sh", self.name.clone()));
+        let bash_script_string = format!("{}", bash_script_path.display());
+
+        // Make the script executable
         let output = Command::new("bash")
             .current_dir(".")
-            .arg(&bash_script_path)
+            .arg(&bash_script_string)
             .output()?;
 
         if !output.status.success() {

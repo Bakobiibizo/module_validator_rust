@@ -4,6 +4,7 @@ use std::error::Error;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use dialoguer::Input;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ArgConfig {
@@ -58,11 +59,11 @@ impl ConfigParser {
         let content = fs::read_to_string(file_path)?;
 
         // Parse argparse arguments
-        let argparse_regex = Regex::new(r#"parser\.add_argument\(['"](--[\w-]+)['"],.*?default=(.*?)(?:,|\))"#)?;
+        let argparse_regex = Regex::new(r#"parser\.add_argument\(['"](--[\w-]+)['"].*?(?:default=(.*?))?(?:,|\))"#)?;
         for cap in argparse_regex.captures_iter(&content) {
             let key = cap[1].trim_start_matches("--").replace("-", "_");
-            let value = cap[2].trim().trim_matches(|c| c == '\'' || c == '"');
-            config.env_vars.insert(key, value.to_string());
+            let default = cap.get(2).map(|m| m.as_str().trim().trim_matches(|c| c == '\'' || c == '"').to_string());
+            config.env_vars.insert(key, default.unwrap_or_default());
         }
 
         // Parse typer commands
@@ -108,6 +109,19 @@ impl ConfigParser {
             config.commands.insert(command_name, command_config);
         }
 
+        Ok(())
+    }
+
+    pub fn prompt_for_env_vars(config: &mut ModuleConfig) -> Result<(), Box<dyn Error>> {
+        for (key, value) in &mut config.env_vars {
+            let default = value.clone();
+            let prompt = format!("Enter value for {} (default: {})", key, default);
+            let input: String = Input::new()
+                .with_prompt(&prompt)
+                .default(default.clone())
+                .interact_text()?;
+            *value = input;
+        }
         Ok(())
     }
 }

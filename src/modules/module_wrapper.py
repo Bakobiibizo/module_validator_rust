@@ -12,7 +12,7 @@ class ModuleWrapper:
             return self.module.unload()
         return "Module unloaded"
 
-    def translate(self, text, source_lang, target_lang):
-        if hasattr(self.module, 'translate'):
-            return self.module.translate(text, source_lang, target_lang)
-        raise NotImplementedError("Translate method not implemented for this module")
+    def process(self, *args, **kwargs):
+        if hasattr(self.module, 'process'):
+            return self.module.process(*args, **kwargs)
+        return "Module process failed"

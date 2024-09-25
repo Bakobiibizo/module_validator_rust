@@ -17,7 +17,7 @@ pub enum Commands {
     /// List all installed modules
     List,
     /// Run a module
-    Run {
+    RunInference {
         /// Name of the module to run
         name: String,
         /// Input text for the module
@@ -31,6 +31,11 @@ pub enum Commands {
     /// Parse and display the configuration of an installed module
     ParseConfig {
         /// Name of the module to parse
+        name: String,
+    },
+    /// Launch a validator for a subnet module
+    LaunchValidator {
+        /// Name of the subnet module to launch validator for
         name: String,
     },
 }

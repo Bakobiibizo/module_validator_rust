@@ -2,6 +2,7 @@ use std::error::Error;
 use std::process::Command;
 use std::path::PathBuf;
 
+/// Represents a validator for subnet modules.
 pub struct Validator {
     subnet_name: String,
     env_dir: PathBuf,
@@ -9,6 +10,15 @@ pub struct Validator {
 }
 
 impl Validator {
+    /// Creates a new Validator instance.
+    ///
+    /// # Arguments
+    ///
+    /// * `subnet_name` - The name of the subnet module to validate.
+    ///
+    /// # Returns
+    ///
+    /// A new Validator instance.
     pub fn new(subnet_name: &str) -> Self {
         let env_dir = PathBuf::from(format!(".{}", subnet_name));
         let module_dir = PathBuf::from("modules").join(subnet_name);
@@ -19,6 +29,11 @@ impl Validator {
         }
     }
 
+    /// Launches the validator for the subnet module.
+    ///
+    /// # Returns
+    ///
+    /// A Result indicating success or failure of the validator launch.
     pub fn launch(&self) -> Result<(), Box<dyn Error>> {
         println!("Launching validator for subnet: {}", self.subnet_name);
 

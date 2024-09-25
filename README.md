@@ -9,6 +9,8 @@ Module Validator is a Rust-based application that manages and executes Python mo
 - Module management through a registry system
 - Database integration for persistent module information
 - Cross-platform support (Linux, macOS, Windows)
+- Support for both subnet and inference modules
+- Command-line interface for easy interaction
 
 ## Prerequisites
 
@@ -36,22 +38,33 @@ Module Validator is a Rust-based application that manages and executes Python mo
 
 ## Usage
 
-1. Run the application:
-   ```
-   cargo run --release
-   ```
+The application provides a command-line interface with the following commands:
 
-2. The application will automatically install the translation module and run a test process.
+- Install a module: `cargo run -- install <URL>`
+- List installed modules: `cargo run -- list`
+- Run inference: `cargo run -- run-inference <MODULE_NAME> <INPUT>`
+- Uninstall a module: `cargo run -- uninstall <MODULE_NAME>`
+- Parse module config: `cargo run -- parse-config <MODULE_NAME>`
+- Launch validator: `cargo run -- launch-validator <SUBNET_NAME>`
+
+Example:
+```
+cargo run -- install https://github.com/example/module.git
+cargo run -- list
+cargo run -- run-inference translation "Hello, world!"
+```
 
 ## Project Structure
 
 - `src/`: Contains the Rust source code
   - `main.rs`: Entry point of the application
   - `lib.rs`: Library root, exports public modules
-  - `modules/`: Contains the InferenceModule implementation
+  - `modules/`: Contains the InferenceModule and SubnetModule implementations
   - `registry.rs`: Implements the ModuleRegistry for managing modules
   - `config.rs`: Handles configuration loading
-- `modules/`: Contains Python modules and wrappers
+  - `database.rs`: Handles database operations
+  - `validator.rs`: Implements the Validator for subnet modules
+- `tests/`: Contains integration tests
 - `scripts/`: Contains utility scripts for setup and maintenance
 
 ## Contributing

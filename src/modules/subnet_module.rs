@@ -60,6 +60,7 @@ impl SubnetModule {
         // Run setup script if it exists
         let setup_script = module_dir.join("setup.sh");
         if setup_script.exists() {
+            println!("Running setup script");
             let output = Command::new("bash")
                 .arg(&setup_script)
                 .current_dir(&module_dir)
@@ -76,6 +77,7 @@ impl SubnetModule {
         // Install Python requirements if requirements.txt exists
         let requirements_file = module_dir.join("requirements.txt");
         if requirements_file.exists() {
+            println!("Installing Python requirements");
             let output = Command::new("pip")
                 .args(&["install", "-r", "requirements.txt"])
                 .current_dir(&module_dir)
@@ -96,32 +98,55 @@ impl SubnetModule {
     }
 
     async fn prompt_for_inference_modules(&mut self) -> Result<(), Box<dyn Error>> {
-        let available_modules = vec!["translation", "embedding"]; // This list should be dynamically generated in the future
-
-        let selections = MultiSelect::new()
-            .with_prompt("Select required inference modules")
-            .items(&available_modules)
-            .interact()?;
-
-        for &index in selections.iter() {
-            self.required_inference_modules.insert(available_modules[index].to_string());
-        }
-
-        if !self.required_inference_modules.is_empty() {
-            let install = Confirm::new()
-                .with_prompt("Do you want to install the selected inference modules?")
-                .default(true)
+        let available_modules = vec!["translation", "embedding", "none"];
+    
+        let mut selections = Vec::new();
+        while selections.is_empty() {
+            println!("Please select required inference modules:");
+            println!("Use ↑↓ arrows to move, Space to select/deselect, Enter to confirm");
+            selections = MultiSelect::new()
+                .with_prompt("Select required inference modules")
+                .items(&available_modules)
                 .interact()?;
-
-            if install {
-                for selected_module in &self.required_inference_modules {
-                    let inference_module = InferenceModule::new(selected_module)?;
-                    inference_module.install().await?;
-                    println!("Inference module {} installed successfully", selected_module);
-                }
+    
+            if selections.is_empty() {
+                println!("No modules selected. Please select at least one option.");
             }
         }
-
+    
+        println!("Debug: Selected indices: {:?}", selections);
+    
+        for &selected_index in &selections {
+            let selected_module = available_modules[selected_index];
+            println!("Debug: Processing selected module: {}", selected_module);
+            if selected_module != "none" {
+                self.required_inference_modules.insert(selected_module.to_string());
+            }
+        }
+    
+        println!("Debug: Required inference modules: {:?}", self.required_inference_modules);
+    
+        if self.required_inference_modules.is_empty() {
+            println!("Only 'none' was selected. No inference modules will be installed.");
+            return Ok(());
+        }
+    
+        let install = Confirm::new()
+            .with_prompt("Do you want to install the selected inference modules?")
+            .default(true)
+            .interact()?;
+    
+        if install {
+            for selected_module in &self.required_inference_modules {
+                println!("Installing inference module: {}", selected_module);
+                let inference_module = InferenceModule::new(selected_module)?;
+                inference_module.install().await?;
+                println!("Inference module {} installed successfully", selected_module);
+            }
+        } else {
+            println!("Inference modules were selected but not installed.");
+        }
+    
         Ok(())
     }
 }

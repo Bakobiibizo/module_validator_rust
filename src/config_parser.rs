@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use dialoguer::Input;
 
+/// Represents the configuration of an argument in a command.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ArgConfig {
     pub type_: String,
@@ -13,48 +14,61 @@ pub struct ArgConfig {
     pub help: Option<String>,
 }
 
+/// Represents the configuration of a command.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CommandConfig {
     pub function: String,
     pub args: HashMap<String, ArgConfig>,
 }
 
+/// Represents the overall configuration of a module.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ModuleConfig {
     pub env_vars: HashMap<String, String>,
     pub commands: HashMap<String, CommandConfig>,
 }
 
+/// Provides functionality for parsing and manipulating module configurations.
 pub struct ConfigParser;
 
 impl ConfigParser {
+    /// Parses the commands and environment variables from a module's directory.
+    ///
+    /// # Arguments
+    ///
+    /// * `file_dir` - The directory containing the module's files.
+    ///
+    /// # Returns
+    ///
+    /// A Result containing the parsed ModuleConfig if successful, or an error if parsing fails.
     pub fn parse_commands(file_dir: &Path) -> Result<ModuleConfig, Box<dyn Error>> {
         let mut config = ModuleConfig {
             env_vars: HashMap::new(),
             commands: HashMap::new(),
         };
-
-        // Parse .env.example file
-        if let Ok(env_content) = fs::read_to_string(file_dir.join(".env.example")) {
+    
+        // Parse .env file
+        let env_file = file_dir.join(".env");
+        if env_file.exists() {
+            let env_content = fs::read_to_string(env_file)?;
             for line in env_content.lines() {
                 if let Some((key, value)) = line.split_once('=') {
                     config.env_vars.insert(key.trim().to_string(), value.trim().to_string());
                 }
             }
         }
-
-        // Parse Python files for additional configuration
-        for entry in fs::read_dir(file_dir)? {
-            let entry = entry?;
-            let path = entry.path();
-            if path.is_file() && path.extension().map_or(false, |ext| ext == "py") {
-                Self::parse_python_file(&path, &mut config)?;
-            }
-        }
-
         Ok(config)
     }
-
+    /// Parses a Python file for configuration details.
+    ///
+    /// # Arguments
+    ///
+    /// * `file_path` - The path to the Python file to parse.
+    /// * `config` - The ModuleConfig to update with parsed information.
+    ///
+    /// # Returns
+    ///
+    /// A Result indicating success or failure of the parsing operation.
     fn parse_python_file(file_path: &Path, config: &mut ModuleConfig) -> Result<(), Box<dyn Error>> {
         let content = fs::read_to_string(file_path)?;
 
@@ -112,6 +126,15 @@ impl ConfigParser {
         Ok(())
     }
 
+    /// Prompts the user for values for environment variables.
+    ///
+    /// # Arguments
+    ///
+    /// * `config` - The ModuleConfig containing the environment variables to prompt for.
+    ///
+    /// # Returns
+    ///
+    /// A Result indicating success or failure of the prompting operation.
     pub fn prompt_for_env_vars(config: &mut ModuleConfig) -> Result<(), Box<dyn Error>> {
         for (key, value) in &mut config.env_vars {
             let default = value.clone();

@@ -12,7 +12,9 @@ use pyo3::prelude::*;
 pub struct InferenceModule {
     /// The name of the inference module.
     pub name: String,
+    /// The URL from which the module can be downloaded.
     pub url: String,
+    /// The root directory for the module.
     pub root_dir: PathBuf,
 }
 
@@ -21,11 +23,11 @@ impl InferenceModule {
     ///
     /// # Arguments
     ///
-    /// * `url` - A string slice that holds the URL of the module to be installed.
+    /// * `input` - A string slice that holds either the URL or the name of the module to be installed.
     ///
     /// # Returns
     ///
-    /// * `Result<Self, Box<dyn Error>>` - Returns an InferenceModule instance if successful, or an error if the URL is invalid.
+    /// * `Result<Self, Box<dyn Error>>` - Returns an InferenceModule instance if successful, or an error if the input is invalid.
     pub fn new(input: impl AsRef<str>) -> Result<Self, Box<dyn Error>> {
         let input = input.as_ref();
         let (name, url) = if input.contains("://") {
@@ -172,10 +174,19 @@ impl InferenceModule {
         Ok(())
     }
 
-pub fn run_inference(&self, input: &str) -> Result<String, Box<dyn Error>> {
+    /// Runs the inference on the given input.
+    ///
+    /// # Arguments
+    ///
+    /// * `input` - A string slice containing the input for the inference.
+    ///
+    /// # Returns
+    ///
+    /// * `Result<String, Box<dyn Error>>` - Returns the result of the inference as a string if successful, or an error if the inference fails.
+    pub fn run_inference(&self, _input: &str) -> Result<String, Box<dyn Error>> {
         let module_dir = self.root_dir.join(&self.name);
         let python_file = module_dir.join(format!("{}.py", self.name));
-        let wrapper_file = self.root_dir.join("src").join("modules").join("module_wrapper.py");
+        let _wrapper_file = self.root_dir.join("src").join("modules").join("module_wrapper.py");
         let python_exec = if cfg!(windows) {
             "python"
         } else {

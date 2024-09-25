@@ -6,8 +6,8 @@ modules/embedding
 .translation
 .venv
 venv
-subnet/sylliba-subnet
-subnet/eden-subnet
+subnets/sylliba-subnet
+subnets/eden-subnet
 .sylliba-subnet
 .eden-subnet
 *__pycache__

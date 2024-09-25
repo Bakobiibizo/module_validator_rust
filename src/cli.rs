@@ -1,5 +1,6 @@
 use clap::{Parser, Subcommand};
 
+/// Represents the command-line interface for the Module Validator application.
 #[derive(Parser)]
 #[clap(author, version, about, long_about = None)]
 pub struct Cli {
@@ -7,6 +8,7 @@ pub struct Cli {
     pub command: Commands,
 }
 
+/// Enumerates the available commands for the Module Validator CLI.
 #[derive(Subcommand)]
 pub enum Commands {
     /// Install a new module

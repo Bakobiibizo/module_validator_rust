@@ -12,7 +12,7 @@ mod validator;
 mod inference;
 
 use dotenv::dotenv;
-use std::env;
+use std::{env, fs};
 use cli::{Cli, Commands};
 use std::path::Path;
 use std::path::PathBuf;
@@ -142,24 +142,32 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 println!("Module directory not found: {:?}", module_dir);
             }
         },
-        Commands::LaunchValidator { name, script_path } => {
-            // Launch the validator for a subnet module
-            // Remove the "subnets/MODULE_NAME" prefix from the script path if present
-            let script_path = if script_path.starts_with(&format!("subnets/{}", name)) {
-                PathBuf::from(script_path.strip_prefix(&format!("subnets/{}", name)).unwrap())
-            } else {
-                PathBuf::from(script_path)
-            };
+        Commands::LaunchValidator { name, args } => {
+            let mut validator = Validator::new(name).expect("Failed to create validator");
+            let mut script_path = String::new();
+            let current_dir = env::current_dir()?;
+            println!("Current working directory: {:?}", current_dir);
 
-            let module_name = name.to_string();
-            let module_list = registry.list_modules().await?;
-            
+//            loop {
+//                println!("Enter the path to the validator script: ");
+//                std::io::stdin().read_line(&mut script_path)?;
+//                script_path = script_path.trim().to_string();
+//
+//                if fs::metadata(&script_path).is_ok() {
+//                    break;
+//                } else {
+//                    println!("No such file or directory: {}", script_path);
+//                    script_path.clear();
+//                }
+            //}
 
+            let output = validator.launch(args.to_vec()).expect("Failed to launch validator");
+            println!("Validator output: {:?}", output);
         }
-    }
-
+    }   
     Ok(())
 }
+
 
 /// Prints the configuration of a module.
 ///

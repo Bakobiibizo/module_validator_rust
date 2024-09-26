@@ -1,4 +1,5 @@
 use clap::{Parser, Subcommand};
+use std::path::PathBuf;
 
 /// Represents the command-line interface for the Module Validator application.
 #[derive(Parser)]
@@ -39,5 +40,6 @@ pub enum Commands {
     LaunchValidator {
         /// Name of the subnet module to launch validator for
         name: String,
+        args: Vec<String>,
     },
 }

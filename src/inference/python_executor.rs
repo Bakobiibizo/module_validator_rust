@@ -29,7 +29,7 @@ impl PythonExecutor {
         } else {
             PathBuf::from(target_script_path)
         };
-        
+
         println!("PythonExecutor initialized");
         Ok(Self {
             venv_path,
@@ -95,22 +95,21 @@ impl PythonExecutor {
         }
     }
 
-    pub fn _run_subnet_script(&self, args: Vec<String>) -> Result<String, Box<dyn Error>> {
-        let mut command = Command::new(&self.python);
-        command.arg("-m")
-               .arg(self.target_script_path.to_str().unwrap().replace("/", "."))
-               .args(args)
-               .current_dir(&self.active_module_dir);
-        let output = command.output()?;
-        if output.status.success() {
-            Ok(String::from_utf8(output.stdout)?)
-        } else {
-            println!("Error: {}", String::from_utf8_lossy(&output.stderr));
-            Err(format!("Failed to run subnet script: {}", String::from_utf8_lossy(&output.stderr)).into())
-        }
-    }
+//    pub fn run_subnet_script(&self, temp_script_path: &PathBuf) -> Result<String, Box<dyn Error>> {
+//        println!("Running subnet script at: {:?}", temp_script_path);
+//        let mut command = Command::new(&self.python);
+//        command.arg(temp_script_path.to_str().unwrap())
+//               .current_dir(&self.active_module_dir);
+//        let output = command.output()?;
+//        if output.status.success() {
+//            Ok(String::from_utf8(output.stdout)?)
+//        } else {
+//            println!("Error: {}", String::from_utf8_lossy(&output.stderr));
+//            Err(format!("Failed to run subnet script: {}", String::from_utf8_lossy(&output.stderr)).into())
+//        }
+//    }
 }
-
+//
 pub fn activate_env(venv_path: &PathBuf) -> Result<String, Box<dyn Error>> {
     let root_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".into()));
 
@@ -128,7 +127,7 @@ pub fn activate_env(venv_path: &PathBuf) -> Result<String, Box<dyn Error>> {
         println!("Created Python virtual environment");
     }
 
-    let python_executable = venv_path.join("bin").join("python");
+    let python_executable = venv_path.join("bin").join("python3");
 
     // Upgrade pip
     let output = Command::new(&python_executable)

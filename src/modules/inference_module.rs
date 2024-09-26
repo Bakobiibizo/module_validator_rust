@@ -5,7 +5,7 @@ use std::process::Command;
 use url::Url;
 use base64;
 use std::path::PathBuf;
-use pyo3::prelude::*;
+use crate::inference::python_executor::{activate_env, install_requirements};
 
 
 /// Represents an inference module that can be installed and managed.
@@ -92,29 +92,10 @@ impl InferenceModule {
 
             println!("Script saved to: {}", script_path.display());
         }
+        let env_path = PathBuf::from(format!(".{}", self.name));
 
-        // Create or update Python virtual environment
-        let venv_path = PathBuf::from(format!(".{}", self.name.clone()));
+        let python_executable = activate_env(&env_path)?;
 
-        if !venv_path.exists() {
-            let output = Command::new("python")
-                .args(&["-m", "venv", venv_path.to_str().unwrap()])
-                .current_dir(self.root_dir.clone())
-                .output()?;
-
-            if !output.status.success() {
-                let error = String::from_utf8_lossy(&output.stderr);
-                return Err(format!("Failed to create virtual environment: {}", error).into());
-            }
-            println!("Created Python virtual environment");
-        }
-
-        // Activate virtual environment and install/update requirements
-        let python_executable = if cfg!(windows) {
-            venv_path.join("Scripts").join("python.exe")
-        } else {
-            venv_path.join("bin").join("python")
-        };
 
         // Run setup_MODULE_NAME.py
         let setup_script = module_dir.join(format!("setup_{}.py", self.name.clone()));
@@ -130,24 +111,14 @@ impl InferenceModule {
             println!("Setup_{}.py: {:?}", self.name.clone(), output);
         } else {
             println!("Setup_{}.py not found", self.name.clone());
-        }
+        }           
 
         // Install Python requirements
         let requirements_file = module_dir.join("requirements.txt");
         if requirements_file.exists() {
-            let output = Command::new(&python_executable)
-                .args(&["-m", "pip", "install", "-r", "requirements.txt"])
-                .current_dir(&module_dir)
-                .output()?;
-
-            if !output.status.success() {
-                let error = String::from_utf8_lossy(&output.stderr);
-                return Err(format!("Failed to install Python requirements: {}", error).into());
-            }
-
-            println!("Python requirements installed/updated successfully");
+            install_requirements(&env_path, &python_executable)?;
         }
-
+        
         // make install_MODULE_NAME.sh executable and run it
         let install_script = module_dir.join(format!("install_{}.sh", self.name.clone()));
         if install_script.exists() {
@@ -172,37 +143,5 @@ impl InferenceModule {
 
         println!("Inference module installed/updated successfully");
         Ok(())
-    }
-
-    /// Runs the inference on the given input.
-    ///
-    /// # Arguments
-    ///
-    /// * `input` - A string slice containing the input for the inference.
-    ///
-    /// # Returns
-    ///
-    /// * `Result<String, Box<dyn Error>>` - Returns the result of the inference as a string if successful, or an error if the inference fails.
-    pub fn run_inference(&self, _input: &str) -> Result<String, Box<dyn Error>> {
-        let module_dir = self.root_dir.join(&self.name);
-        let python_file = module_dir.join(format!("{}.py", self.name));
-        let _wrapper_file = self.root_dir.join("src").join("modules").join("module_wrapper.py");
-        let python_exec = if cfg!(windows) {
-            "python"
-        } else {
-            "python3"
-        };
-
-        let result = Command::new(python_exec)
-            .args(&["-m", "module_wrapper", python_file.to_str().unwrap()])
-            .output()?;
-
-        if !result.status.success() {
-            let error = String::from_utf8_lossy(&result.stderr);
-            return Err(format!("Failed to run inference module: {}", error).into());
-        }
-
-        let output = String::from_utf8_lossy(&result.stdout);
-        Ok(output.to_string())
     }
 }

@@ -9,18 +9,19 @@ mod utils;
 mod registry;
 mod database;
 mod validator;
+mod inference;
 
 use dotenv::dotenv;
 use std::env;
 use cli::{Cli, Commands};
 use std::path::Path;
-use dialoguer::MultiSelect;
 use std::path::PathBuf;
 use crate::config_parser::ConfigParser;
 use crate::modules::subnet_module::SubnetModule;
 use crate::modules::inference_module::InferenceModule;
 use crate::registry::ModuleRegistry;
 use crate::validator::Validator;
+use crate::inference::python_executor::{PythonExecutor, activate_env};
 
 /// Main entry point for the Module Validator application.
 #[tokio::main]
@@ -44,10 +45,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Commands::Install { url } => {
             // Determine module type and name based on the URL
             if url.contains("://") || url.contains('/') {
-                let module_info = registry.get_module(url).await?;
                 module_name = url.split("/").last().unwrap().to_string();
                 module_type = if url.contains("github.com") {
-                    "subnet".to_string()
+                    "subnets".to_string()
                 } else {
                     "inference".to_string()
                 };
@@ -56,7 +56,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 module_type = "inference".to_string();
             }
 
-            if module_type == "subnet" {
+            activate_env(&PathBuf::from(format!(".{}", module_name)))?;
+
+            if module_type == "subnets" {
                 // Install and register subnet module
                 let mut subnet_module = SubnetModule::new(url)?;
                 subnet_module.install().await?;
@@ -86,10 +88,25 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         }
         Commands::RunInference { name, input } => {
-            // Run inference on a specific module
-            let inference_module = InferenceModule::new(name)?;
-            let result = inference_module.run_inference(input)?;
-            println!("Result: {}", result);
+            println!("Running inference for module: {}", name);
+            let module_name = name.clone();
+            let module_type = "inference".to_string();
+            let target_script_path = format!("{}/{}/{}.py", "modules", &module_name, &module_name);
+        
+            println!("Target script path: {}", target_script_path);
+            let mut python_executor = PythonExecutor::new(
+                module_name.clone(),
+                module_type,
+                target_script_path,
+            )?; // Use the ? operator to propagate the error
+        
+            // Split the input string into a vector of arguments
+            let args: Vec<String> = input.split_whitespace().map(String::from).collect();
+        
+            match python_executor.run_inference(args) {
+                Ok(result) => println!("Inference result: {}", result),
+                Err(e) => println!("Error running inference: {}", e),
+            }
         }
         Commands::Uninstall { name } => {
             // Uninstall a module
@@ -125,16 +142,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 println!("Module directory not found: {:?}", module_dir);
             }
         },
-        Commands::LaunchValidator { name } => {
+        Commands::LaunchValidator { name, script_path } => {
             // Launch the validator for a subnet module
+            // Remove the "subnets/MODULE_NAME" prefix from the script path if present
+            let script_path = if script_path.starts_with(&format!("subnets/{}", name)) {
+                PathBuf::from(script_path.strip_prefix(&format!("subnets/{}", name)).unwrap())
+            } else {
+                PathBuf::from(script_path)
+            };
+
             let module_name = name.to_string();
             let module_list = registry.list_modules().await?;
-            if module_list.contains(&(module_name.clone(), "subnet".to_string())) {
-                let mut validator = Validator::new(&name)?;
-                validator.launch()?;
-            } else {
-                println!("'{}' is not a valid subnet module", name);
-            }
+            
+
         }
     }
 

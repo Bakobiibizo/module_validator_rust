@@ -78,8 +78,8 @@ impl SubnetModule {
         let requirements_file = module_dir.join("requirements.txt");
         if requirements_file.exists() {
             println!("Installing Python requirements");
-            let output = Command::new("pip")
-                .args(&["install", "-r", "requirements.txt"])
+            let output = Command::new("python")
+                .args(&["-m", "pip", "install", "-r", "requirements.txt"])
                 .current_dir(&module_dir)
                 .output()?;
 

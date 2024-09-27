@@ -13,3 +13,7 @@ subnets/eden-subnet
 *__pycache__
 .test_subnet
 .test_module
+.bittensor-cli
+.bittensor
+.communex
+.commune

@@ -1,3 +1,8 @@
+//! Module registry for the Module Validator application.
+//!
+//! This module provides a ModuleRegistry struct for managing the registration,
+//! unregistration, and querying of modules.
+
 use std::collections::HashMap;
 use std::error::Error as StdError;
 use crate::database::Database;

@@ -1,5 +1,7 @@
 //! Main module for the Module Validator application.
+//!
 //! This application manages the installation, listing, and execution of various modules.
+//! It provides a command-line interface for interacting with the module system.
 
 use clap::Parser;
 mod cli;

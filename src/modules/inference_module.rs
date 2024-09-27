@@ -1,3 +1,7 @@
+//! Inference module for the Module Validator application.
+//!
+//! This module provides functionality for installing and managing inference modules.
+
 use reqwest;
 use std::error::Error;
 use std::fs;
@@ -6,7 +10,6 @@ use url::Url;
 use base64;
 use std::path::PathBuf;
 use crate::inference::python_executor::{activate_env, install_requirements};
-
 
 /// Represents an inference module that can be installed and managed.
 pub struct InferenceModule {

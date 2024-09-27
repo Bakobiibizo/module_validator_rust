@@ -1,17 +1,31 @@
+//! Validator module for subnet modules in the Module Validator application.
+//!
+//! This module provides functionality for validating and launching subnet modules.
+
 use std::error::Error;
 use std::fs;
-use std::path::{Path, PathBuf};
-use std::env;
+use std::path::{PathBuf};
 use crate::inference::python_executor::PythonExecutor;
 
+/// Represents a validator for subnet modules.
 pub struct Validator {
     subnet_name: String,
+    #[allow(dead_code)]
     env_dir: PathBuf,
     module_dir: PathBuf,
     validator_path: Option<PathBuf>,
 }
 
 impl Validator {
+    /// Creates a new Validator instance for a given subnet.
+    ///
+    /// # Arguments
+    ///
+    /// * `subnet_name` - The name of the subnet to validate.
+    ///
+    /// # Returns
+    ///
+    /// A Result containing the Validator if successful, or an error if creation fails.
     pub fn new(subnet_name: &str) -> Result<Self, Box<dyn Error>> {
         println!("Creating new validator for subnet: {}", subnet_name);
         let env_dir = PathBuf::from(format!(".{}", subnet_name));
@@ -28,6 +42,11 @@ impl Validator {
         Ok(validator)
     }
 
+    /// Prompts the user for the path to the validator script.
+    ///
+    /// # Returns
+    ///
+    /// A Result containing the PathBuf of the validator script if successful, or an error if the operation
     #[allow(dead_code)]
     pub fn prompt_user_for_path(&self) -> Result<PathBuf, Box<dyn Error>> {
         let mut validator_path = String::new();
@@ -37,6 +56,11 @@ impl Validator {
         Ok(validator_path)
     }
 
+    /// Finds the validator script in the module directory.
+    ///
+    /// # Returns
+    ///
+    /// A Result indicating success or failure of finding the validator script.
     fn find_validator_script(&mut self) -> Result<(), Box<dyn Error>> {
         println!("Finding validator script in: {:?}", self.module_dir);
         fn find_script(module_dir: &PathBuf) -> Option<PathBuf> {
@@ -63,6 +87,15 @@ impl Validator {
         }
     }
 
+    /// Identifies and prepares the inference for the subnet.
+    ///
+    /// # Arguments
+    ///
+    /// * `_args` - The arguments for the inference (currently unused).
+    ///
+    /// # Returns
+    ///
+    /// A Result indicating success or failure of the preparation.
     pub fn identify_and_prepare_inference(&mut self, _args: &String) -> Result<(), Box<dyn Error>> {
         println!("Preparing inference for subnet: {}", self.subnet_name);
         
@@ -77,6 +110,15 @@ impl Validator {
         Ok(())
     }
 
+    /// Launches the validator for the subnet.
+    ///
+    /// # Arguments
+    ///
+    /// * `args` - Optional arguments to pass to the validator.
+    ///
+    /// # Returns
+    ///
+    /// A Result indicating success or failure of the validator launch.
     pub fn launch(&self, args: Option<&String>) -> Result<(), Box<dyn Error>> {
         println!("Launching validator for subnet: {}", self.subnet_name);
         let validator_path = self.validator_path.as_ref().ok_or("Validator path not set")?;

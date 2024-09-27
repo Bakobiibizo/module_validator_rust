@@ -1,4 +1,11 @@
-#[cfg(test)]
+//! Module Validator Library
+//!
+//! This library provides functionality for managing and executing Python modules
+//! dynamically within a Rust environment. It includes features for module installation,
+//! registration, and execution.
+
+
+#[cfg(tests)]
 mod tests;
 pub mod config;
 pub mod registry;

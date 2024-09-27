@@ -1,9 +1,14 @@
+//! Python executor module for the Module Validator application.
+//!
+//! This module provides functionality for executing Python code and managing Python environments.
+
 use std::path::PathBuf;
 use std::process::Command;
 use std::error::Error;
 use std::env;
 use std::collections::HashMap;
 
+/// Represents a Python executor for running Python code in a specific environment.
 pub struct PythonExecutor {
     venv_path: PathBuf,
     stored_env: Option<HashMap<String, String>>,
@@ -13,6 +18,17 @@ pub struct PythonExecutor {
 }
 
 impl PythonExecutor {
+    /// Creates a new PythonExecutor instance.
+    ///
+    /// # Arguments
+    ///
+    /// * `active_module_name` - The name of the active module.
+    /// * `active_module_type` - The type of the active module.
+    /// * `target_script_path` - The path to the target Python script.
+    ///
+    /// # Returns
+    ///
+    /// A Result containing the PythonExecutor if successful, or an error if creation fails.
     pub fn new(active_module_name: String, active_module_type: String, target_script_path: String) -> Result<Self, Box<dyn Error>> {
         let root_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".into()));
         let venv_path = root_dir.join(format!(".{}", &active_module_name));
@@ -40,6 +56,15 @@ impl PythonExecutor {
         Ok(executor)
     }
 
+    /// Runs a Python command in the executor's environment.
+    ///
+    /// # Arguments
+    ///
+    /// * `args` - The arguments to pass to the Python command.
+    ///
+    /// # Returns
+    ///
+    /// A Result containing the output of the command if successful, or an error if the command fails.
     pub fn run_command(&self, args: String) -> Result<String, Box<dyn Error>> {
         let target_script_path = self.target_script_path.to_str().unwrap().replace(".py", "").replace("/", ".");
         let command_str = if cfg!(windows) {
@@ -90,6 +115,11 @@ impl PythonExecutor {
         }
     }
 
+    /// Sources the environment variables for the Python environment.
+    ///
+    /// # Returns
+    ///
+    /// A Result containing the output of the sourcing operation if successful, or an error if it fails.
     pub fn source_env(&mut self) -> Result<String, std::io::Error> {
         let activate_script = if cfg!(windows) {
             self.venv_path.join("Scripts").join("activate.bat")
@@ -137,6 +167,15 @@ impl PythonExecutor {
     }
 }
 
+/// Activates a Python virtual environment.
+///
+/// # Arguments
+///
+/// * `venv_path` - The path to the virtual environment.
+///
+/// # Returns
+///
+/// A Result containing the path to the Python executable if successful, or an error if activation fails.
 pub fn activate_env(venv_path: &PathBuf) -> Result<String, Box<dyn Error>> {
     let root_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".into()));
 
@@ -170,6 +209,16 @@ pub fn activate_env(venv_path: &PathBuf) -> Result<String, Box<dyn Error>> {
     Ok(python_executable.to_string_lossy().into_owned())
 }
 
+/// Installs Python requirements for a module.
+///
+/// # Arguments
+///
+/// * `venv_path` - The path to the virtual environment.
+/// * `python_executable` - The path to the Python executable.
+///
+/// # Returns
+///
+/// A Result indicating success or failure of the installation.
 pub fn install_requirements(venv_path: &PathBuf, python_executable: &str) -> Result<(), Box<dyn Error>> {
     let root_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".into()));
     let module_name = venv_path.file_name().unwrap().to_str().unwrap().trim_start_matches('.');

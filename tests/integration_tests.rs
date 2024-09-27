@@ -15,3 +15,4 @@ async fn test_module_installation_and_registration() {
     assert!(!result.is_empty(), "Processed text should not be empty");
 
     registry.unregister_module(&inference_module.name).await.expect("Failed to unregister module");
+}

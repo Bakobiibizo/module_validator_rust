@@ -1,3 +1,8 @@
+//! Database module for the Module Validator application.
+//!
+//! This module provides a Database struct for interacting with the PostgreSQL database,
+//! including operations for registering, unregistering, and querying modules.
+
 use sqlx::postgres::{PgPool, PgRow};
 use sqlx::Row;
 use std::error::Error as StdError;

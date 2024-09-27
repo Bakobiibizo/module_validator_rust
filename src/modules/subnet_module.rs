@@ -6,13 +6,26 @@ use std::collections::HashSet;
 use dialoguer::{MultiSelect, Confirm};
 use crate::modules::inference_module::InferenceModule;
 
+/// Represents a subnet module that can be installed and managed.
 pub struct SubnetModule {
+    /// The name of the subnet module.
     pub name: String,
+    /// The URL from which the module can be downloaded.
     pub url: String,
+    /// The set of required inference modules for this subnet module.
     pub required_inference_modules: HashSet<String>,
 }
 
 impl SubnetModule {
+    /// Creates a new SubnetModule instance.
+    ///
+    /// # Arguments
+    ///
+    /// * `url` - The URL of the subnet module repository.
+    ///
+    /// # Returns
+    ///
+    /// * `Result<Self, Box<dyn Error>>` - Returns a SubnetModule instance if successful, or an error if the URL is invalid.
     pub fn new(url: impl AsRef<str>) -> Result<Self, Box<dyn Error>> {
         let url = url.as_ref();
         let parsed_url = Url::parse(url)?;
@@ -28,6 +41,18 @@ impl SubnetModule {
         })
     }
 
+    /// Installs the subnet module.
+    ///
+    /// This function performs the following steps:
+    /// 1. Clones the repository from the provided URL.
+    /// 2. Runs the setup script if it exists.
+    /// 3. Installs Python requirements if a requirements.txt file is present.
+    /// 4. Prompts the user to select required inference modules.
+    /// 5. Installs the selected inference modules.
+    ///
+    /// # Returns
+    ///
+    /// * `Result<(), Box<dyn Error>>` - Returns Ok(()) if the installation is successful, or an error if any step fails.
     pub async fn install(&mut self) -> Result<(), Box<dyn Error>> {
         println!("Installing subnet module: {}", self.name);
 
@@ -96,7 +121,15 @@ impl SubnetModule {
         println!("Subnet module installed successfully");
         Ok(())
     }
-
+    
+    /// Prompts the user to select required inference modules.
+    ///
+    /// This function displays a multi-select menu for the user to choose from a list of available inference modules.
+    /// The selected modules are then added to the `required_inference_modules` set.
+    ///
+    /// # Returns
+    ///
+    /// * `Result<(), Box<dyn Error>>` - Returns Ok(()) if the user selects at least one module, or an error if an issue occurs.
     async fn prompt_for_inference_modules(&mut self) -> Result<(), Box<dyn Error>> {
         let available_modules = vec!["translation", "embedding", "none"];
     

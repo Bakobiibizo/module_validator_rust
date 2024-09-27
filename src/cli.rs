@@ -1,3 +1,7 @@
+//! Command-line interface module for the Module Validator application.
+//!
+//! This module defines the structure and available commands for the CLI.
+
 use clap::{Parser, Subcommand};
 
 /// Represents the command-line interface for the Module Validator application.

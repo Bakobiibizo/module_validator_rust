@@ -2,26 +2,27 @@
 //! This application manages the installation, listing, and execution of various modules.
 
 use clap::Parser;
-mod modules;
 mod cli;
 mod config_parser;
-mod utils;
-mod registry;
 mod database;
-mod validator;
 mod inference;
+mod modules;
+mod registry;
+mod utils;
+mod validator;
 
-use dotenv::dotenv;
-use std::{env, fs};
 use cli::{Cli, Commands};
+use dotenv::dotenv;
+use std::env;
 use std::path::Path;
 use std::path::PathBuf;
+
 use crate::config_parser::ConfigParser;
-use crate::modules::subnet_module::SubnetModule;
+use crate::inference::python_executor::{activate_env, PythonExecutor};
 use crate::modules::inference_module::InferenceModule;
+use crate::modules::subnet_module::SubnetModule;
 use crate::registry::ModuleRegistry;
 use crate::validator::Validator;
-use crate::inference::python_executor::{PythonExecutor, activate_env};
 
 /// Main entry point for the Module Validator application.
 #[tokio::main]
@@ -34,7 +35,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Get database URL from environment variable
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    
+
     // Initialize the module registry
     let mut registry = ModuleRegistry::new(&database_url).await?;
     let mut module_type = String::new();
@@ -55,28 +56,36 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 module_name = url.to_string();
                 module_type = "inference".to_string();
             }
-
             activate_env(&PathBuf::from(format!(".{}", module_name)))?;
 
             if module_type == "subnets" {
                 // Install and register subnet module
                 let mut subnet_module = SubnetModule::new(url)?;
                 subnet_module.install().await?;
-                registry.register_module(module_name.clone(), module_type.clone()).await?;
-                println!("{} module installed and registered successfully", module_name);
-                
+                registry
+                    .register_module(module_name.clone(), module_type.clone())
+                    .await?;
+                println!(
+                    "{} module installed and registered successfully",
+                    module_name
+                );
+
                 // Parse and configure module
                 let module_dir = Path::new(&module_type).join(&module_name);
                 let mut config = ConfigParser::parse_commands(&module_dir)?;
                 ConfigParser::prompt_for_env_vars(&mut config)?;
                 print_config(&config);
-
             } else {
                 // Install and register inference module
                 let inference_module = InferenceModule::new(url)?;
                 inference_module.install().await?;
-                registry.register_module(module_name.clone(), module_type.clone()).await?;
-                println!("{} module installed and registered successfully", module_name);
+                registry
+                    .register_module(module_name.clone(), module_type.clone())
+                    .await?;
+                println!(
+                    "{} module installed and registered successfully",
+                    module_name
+                );
             }
         }
         Commands::List => {
@@ -92,18 +101,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             let module_name = name.clone();
             let module_type = "inference".to_string();
             let target_script_path = format!("{}/{}/{}.py", "modules", &module_name, &module_name);
-        
+
             println!("Target script path: {}", target_script_path);
-            let mut python_executor = PythonExecutor::new(
-                module_name.clone(),
-                module_type,
-                target_script_path,
-            )?; // Use the ? operator to propagate the error
-        
+            let python_executor =
+                PythonExecutor::new(module_name.clone(), module_type, target_script_path)?; // Use the ? operator to propagate the error
+
             // Split the input string into a vector of arguments
-            let args: Vec<String> = input.split_whitespace().map(String::from).collect();
-        
-            match python_executor.run_inference(args) {
+            let args = input.to_string();
+
+            match python_executor.run_command(args) {
                 Ok(result) => println!("Inference result: {}", result),
                 Err(e) => println!("Error running inference: {}", e),
             }
@@ -122,18 +128,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     Ok(mut config) => {
                         println!("Successfully parsed configuration:");
                         print_config(&config);
-        
+
                         // Prompt for environment variables
                         if let Err(e) = ConfigParser::prompt_for_env_vars(&mut config) {
                             println!("Error prompting for environment variables: {}", e);
                         }
-        
+
                         // Save the configuration
                         match ConfigParser::save_config(&config, &module_dir) {
                             Ok(_) => println!("Configuration saved successfully."),
                             Err(e) => println!("Error saving configuration: {}", e),
                         }
-                    },
+                    }
                     Err(e) => {
                         println!("Error parsing configuration: {}", e);
                     }
@@ -141,33 +147,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             } else {
                 println!("Module directory not found: {:?}", module_dir);
             }
-        },
+        }
         Commands::LaunchValidator { name, args } => {
-            let mut validator = Validator::new(name).expect("Failed to create validator");
-            let mut script_path = String::new();
-            let current_dir = env::current_dir()?;
-            println!("Current working directory: {:?}", current_dir);
-
-//            loop {
-//                println!("Enter the path to the validator script: ");
-//                std::io::stdin().read_line(&mut script_path)?;
-//                script_path = script_path.trim().to_string();
-//
-//                if fs::metadata(&script_path).is_ok() {
-//                    break;
-//                } else {
-//                    println!("No such file or directory: {}", script_path);
-//                    script_path.clear();
-//                }
-            //}
-
-            let output = validator.launch(args.to_vec()).expect("Failed to launch validator");
+            let mut validator = Validator::new(&name).unwrap();
+            validator.identify_and_replace_inference(&args)?;
+            let output = validator.launch(args)?;
             println!("Validator output: {:?}", output);
         }
-    }   
+    }
     Ok(())
 }
-
 
 /// Prints the configuration of a module.
 ///

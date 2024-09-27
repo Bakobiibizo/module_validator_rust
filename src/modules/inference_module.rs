@@ -12,7 +12,7 @@ use crate::inference::python_executor::{activate_env, install_requirements};
 pub struct InferenceModule {
     /// The name of the inference module.
     pub name: String,
-    /// The URL from which the module can be downloaded.
+    /// The url from which the module can be downloaded.
     pub url: String,
     /// The root directory for the module.
     pub root_dir: PathBuf,

@@ -150,8 +150,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         Commands::LaunchValidator { name, args } => {
             let mut validator = Validator::new(&name).unwrap();
-            validator.identify_and_replace_inference(&args)?;
-            let output = validator.launch(args)?;
+
+            validator.identify_and_prepare_inference(&args)?;
+            let output = validator.launch(if args.is_empty() { None } else { Some(args) })?;
             println!("Validator output: {:?}", output);
         }
     }

@@ -1,8 +1,7 @@
-use regex::Regex;
 use std::error::Error;
 use std::fs;
-use std::path::PathBuf;
-
+use std::path::{Path, PathBuf};
+use std::env;
 use crate::inference::python_executor::PythonExecutor;
 
 pub struct Validator {
@@ -64,54 +63,45 @@ impl Validator {
         }
     }
 
-    pub fn identify_and_replace_inference(
-        &mut self,
-        args: &String,
-    ) -> Result<(), Box<dyn Error>> {
-        println!("Identifying and replacing inference");
-        println!("Module dir: {:?}", self.module_dir);
+    pub fn identify_and_prepare_inference(&mut self, _args: &String) -> Result<(), Box<dyn Error>> {
+        println!("Preparing inference for subnet: {}", self.subnet_name);
         
         let script_path = self.validator_path.as_ref().ok_or("Validator script not found")?;
-        println!("Script path: {:?}", script_path);
+        println!("Original script path: {:?}", script_path);
 
-        let new_script_path_str = script_path.to_str().unwrap().replace(&format!("subnets/{}/", self.subnet_name), "");
-        self.validator_path = Some(PathBuf::from(new_script_path_str));
+        // Adjust the path to be relative to the subnet folder
+        let relative_script_path = script_path.strip_prefix(&self.module_dir)?;
+        self.validator_path = Some(relative_script_path.to_path_buf());
         
-        let inference_command = format!(
-            "def forward():\n    import subprocess\n    result = subprocess.run(['python3', '{}', '{}'], capture_output=True, text=True)\n    return result.stdout",
-            self.validator_path.as_ref().unwrap().to_str().unwrap(),
-            args
-        );
-        
-        println!("Validator path: {}", self.validator_path.as_ref().unwrap().to_str().unwrap());
-        let forward_regex = Regex::new(r"(?s)def\s+forward\s*\([^)]*\)\s*:(.*?)(?:\n\S|\z)")?;
-
-        let file_content = fs::read_to_string(script_path)?;
-
-        if let Some(captures) = forward_regex.captures(&file_content) {
-            let full_match = captures.get(0).unwrap().as_str();
-            println!("Replacing: {}\nWith: {}", full_match, inference_command);
-            let modified_content = file_content.replace(full_match, &inference_command);
-            fs::write(script_path, modified_content)?;
-            Ok(())
-        } else {
-            Err("Could not find the forward function in the validator script".into())
-        }
+        println!("Adjusted validator path: {:?}", self.validator_path);
+        Ok(())
     }
 
-    pub fn launch(
-        &self,
-        args: &String,
-    ) -> Result<(), Box<dyn Error>> {
+    pub fn launch(&self, args: Option<&String>) -> Result<(), Box<dyn Error>> {
         println!("Launching validator for subnet: {}", self.subnet_name);
         let validator_path = self.validator_path.as_ref().ok_or("Validator path not set")?;
+        
+        println!("Validator path: {:?}", validator_path);
+        
         let executor = PythonExecutor::new(
             self.subnet_name.clone(),
-            "subnets".to_string(),
-            validator_path.to_str().unwrap().to_string()
+            "subnet".to_string(),
+            validator_path.to_str().unwrap().to_string(),
         )?;
-        let output = executor.run_command(args.to_string())?;
-        println!("Validator output: {}", output);
+
+        println!("Executing Python command...");
+        let output = match args {
+            Some(arg_str) => executor.run_command(arg_str.to_string())?,
+            None => executor.run_command(String::new())?,
+        };
+        println!("Raw output from Python execution: {:?}", output);
+
+        if output.trim().is_empty() {
+            println!("Warning: The validator produced no output.");
+        } else {
+            println!("Validator output: {}", output);
+        }
+
         Ok(())
     }
 }

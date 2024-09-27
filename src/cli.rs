@@ -39,7 +39,8 @@ pub enum Commands {
     LaunchValidator {
         /// Name of the subnet module to launch validator for
         name: String,
-        /// Arguments to pass to the validator
+        /// Arguments to pass to the validator (optional)
+        #[clap(default_value = "")]
         args: String,
     },
 }

@@ -42,19 +42,27 @@ impl PythonExecutor {
 
     pub fn run_command(&self, args: String) -> Result<String, Box<dyn Error>> {
         let target_script_path = self.target_script_path.to_str().unwrap().replace(".py", "").replace("/", ".");
-        let mut command = if cfg!(windows) {
-            let mut cmd = Command::new("cmd");
-            cmd.args(&["/C", &format!("{} && {} -m {}", 
+        let command_str = if cfg!(windows) {
+            format!("{} && {} -m {}", 
                 self.venv_path.join("Scripts").join("activate.bat").to_str().unwrap(),
                 &self.python,
-                target_script_path)]);
+                target_script_path)
+        } else {
+            format!("source {} && {} -m {}", 
+                self.venv_path.join("bin").join("activate").to_str().unwrap(),
+                &self.python,
+                target_script_path)
+        };
+
+        println!("Executing command: {}", command_str);
+
+        let mut command = if cfg!(windows) {
+            let mut cmd = Command::new("cmd");
+            cmd.args(&["/C", &command_str]);
             cmd
         } else {
             let mut cmd = Command::new("bash");
-            cmd.args(&["-c", &format!("source {} && {} -m {}", 
-                self.venv_path.join("bin").join("activate").to_str().unwrap(),
-                &self.python,
-                target_script_path)]);
+            cmd.args(&["-c", &command_str]);
             cmd
         };
 
@@ -64,17 +72,20 @@ impl PythonExecutor {
         if let Some(env_vars) = &self.stored_env {
             for (key, value) in env_vars {
                 command.env(key, value);
-                println!("Debug: Applied env var: {}={}", key, value);  // Debug line
+                println!("Debug: Applied env var: {}={}", key, value);
             }
         } else {
-            println!("Debug: No stored environment variables found");  // Debug line
+            println!("Debug: No stored environment variables found");
         }
 
         let output = command.output()?;
+        println!("Command exit status: {}", output.status);
+        println!("Command stdout: {}", String::from_utf8_lossy(&output.stdout));
+        println!("Command stderr: {}", String::from_utf8_lossy(&output.stderr));
+
         if output.status.success() {
             Ok(String::from_utf8(output.stdout)?)
         } else {
-            println!("Error: {}", String::from_utf8_lossy(&output.stderr));
             Err(format!("Failed to run inference: {}", String::from_utf8_lossy(&output.stderr)).into())
         }
     }

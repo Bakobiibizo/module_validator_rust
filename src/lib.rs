@@ -4,16 +4,16 @@
 //! dynamically within a Rust environment. It includes features for module installation,
 //! registration, and execution.
 
-
-#[cfg(tests)]
+#[cfg(test)]
 mod tests;
+
 pub mod config;
 pub mod registry;
 pub mod database;
 pub mod utils;
 pub mod modules;
 pub mod inference;
-
+pub mod validator;
 pub use config::Config;
 pub use registry::ModuleRegistry;
 pub use crate::modules::inference_module::InferenceModule;

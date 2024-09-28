@@ -17,3 +17,5 @@ subnets/eden-subnet
 .bittensor
 .communex
 .commune
+.test_subnet
+.test_module

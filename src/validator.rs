@@ -4,7 +4,7 @@
 
 use std::error::Error;
 use std::fs;
-use std::path::{PathBuf};
+use std::path::PathBuf;
 use crate::inference::python_executor::PythonExecutor;
 
 /// Represents a validator for subnet modules.
@@ -37,6 +37,7 @@ impl Validator {
             validator_path: None,
         };
 
+        
         validator.find_validator_script()?;
         Ok(validator)
     }
@@ -64,7 +65,9 @@ impl Validator {
         println!("Finding validator script in: {:?}", self.module_dir);
         fn find_script(module_dir: &PathBuf) -> Option<PathBuf> {
             if let Ok(entries) = fs::read_dir(module_dir) {
+                println!("Entries: {:?}", entries);
                 for entry in entries.flatten() {
+                    println!("Checking entry: {:?}", entry.path());
                     let path = entry.path();
                     if path.is_file() && path.file_name().unwrap() == "validator.py" {
                         return Some(path);

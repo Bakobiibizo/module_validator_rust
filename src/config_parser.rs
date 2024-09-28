@@ -147,6 +147,7 @@ impl ConfigParser {
 
             config.commands.insert(command_name, command_config);
         }
+        Self::prompt_for_env_vars(config)?;
 
         println!("Finished parsing file: {:?}", file_path);
         Ok(())
@@ -176,12 +177,20 @@ impl ConfigParser {
 
     pub fn save_config(config: &ModuleConfig, module_dir: &Path) -> Result<(), Box<dyn Error>> {
         let env_file_path = module_dir.join(".env");
-        let mut file = fs::File::create(env_file_path)?;
-
-        for (key, value) in &config.env_vars {
-            writeln!(file, "{}={}", key, value)?;
+        if !env_file_path.exists() {
+            let mut save_file = fs::File::create(env_file_path)?;
+            for (key, value) in &config.env_vars {
+                writeln!(save_file, "{}={}", key, value)?;
+            }
+        } else {
+            let mut save_file = fs::OpenOptions::new()
+                .write(true)
+                .append(true)
+                .open(env_file_path)?;
+            for (key, value) in &config.env_vars {
+                writeln!(save_file, "{}={}", key, value)?;
+            }
         }
-
         println!("Configuration saved to: {:?}", module_dir.join(".env"));
         Ok(())
     }

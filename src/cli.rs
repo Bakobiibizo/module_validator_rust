@@ -10,10 +10,6 @@ use clap::{Parser, Subcommand};
 pub struct Cli {
     #[clap(subcommand)]
     pub command: Commands,
-
-    /// Use test database
-    #[clap(long, global = true)]
-    pub test: bool,
 }
 
 /// Enumerates the available commands for the Module Validator CLI.
@@ -24,19 +20,12 @@ pub enum Commands {
         /// URL of the module to install
         url: String,
     },
-    /// List all installed modules
-    List,
     /// Run a module
     RunInference {
         /// Name of the module to run
         name: String,
         /// Input text for the module
         input: String,
-    },
-    /// Uninstall a module
-    Uninstall {
-        /// Name of the module to uninstall
-        name: String,
     },
     /// Parse and display the configuration of an installed module
     ParseConfig {

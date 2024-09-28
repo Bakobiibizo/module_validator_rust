@@ -1,7 +1,7 @@
 use std::error::Error;
 use std::process::Command;
 use url::Url;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::collections::HashSet;
 use dialoguer::{MultiSelect, Confirm};
 use crate::modules::inference_module::InferenceModule;
@@ -70,6 +70,9 @@ impl SubnetModule {
             .args(&["-m", "venv", env_dir.to_str().unwrap()])
             .output()?;
 
+        // Get the Python executable path from the virtual environment
+        let python_executable = self.get_venv_python(&env_dir)?;
+
         // Clone the repository
         let output = Command::new("git")
             .args(&["clone", &self.url, &module_dir.to_string_lossy()])
@@ -103,7 +106,7 @@ impl SubnetModule {
         let requirements_file = module_dir.join("requirements.txt");
         if requirements_file.exists() {
             println!("Installing Python requirements");
-            let output = Command::new("python")
+            let output = Command::new(&python_executable)
                 .args(&["-m", "pip", "install", "-r", "requirements.txt"])
                 .current_dir(&module_dir)
                 .output()?;
@@ -116,12 +119,41 @@ impl SubnetModule {
             println!("Python requirements installed successfully");
         }
 
+        // Install the package in editable mode
+        println!("Installing package in editable mode");
+        let output = Command::new(&python_executable)
+            .args(&["-m", "pip", "install", "-e", "."])
+            .current_dir(&module_dir)
+            .output()?;
+
+        if !output.status.success() {
+            let error = String::from_utf8_lossy(&output.stderr);
+            return Err(format!("Failed to install package in editable mode: {}", error).into());
+        }
+
+        println!("Package installed in editable mode successfully");
+
         self.prompt_for_inference_modules().await?;
 
         println!("Subnet module installed successfully");
         Ok(())
     }
-    
+
+    // New method to get the Python executable path from the virtual environment
+    fn get_venv_python(&self, env_dir: &Path) -> Result<PathBuf, Box<dyn Error>> {
+        #[cfg(target_os = "windows")]
+        let python_path = env_dir.join("Scripts").join("python.exe");
+
+        #[cfg(not(target_os = "windows"))]
+        let python_path = env_dir.join("bin").join("python");
+
+        if python_path.exists() {
+            Ok(python_path)
+        } else {
+            Err(format!("Python executable not found in virtual environment: {:?}", python_path).into())
+        }
+    }
+
     /// Prompts the user to select required inference modules.
     ///
     /// This function displays a multi-select menu for the user to choose from a list of available inference modules.

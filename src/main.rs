@@ -6,16 +6,13 @@
 use clap::Parser;
 mod cli;
 mod config_parser;
-mod database;
 mod inference;
 mod modules;
-mod registry;
 mod utils;
 mod validator;
 
 use cli::{Cli, Commands};
 use dotenv::dotenv;
-use std::env;
 use std::path::Path;
 use std::path::PathBuf;
 
@@ -23,7 +20,6 @@ use crate::config_parser::ConfigParser;
 use crate::inference::python_executor::{activate_env, PythonExecutor};
 use crate::modules::inference_module::InferenceModule;
 use crate::modules::subnet_module::SubnetModule;
-use crate::registry::ModuleRegistry;
 use crate::validator::Validator;
 
 /// Main entry point for the Module Validator application.
@@ -36,7 +32,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
 
     // Initialize the module registry with the test flag
-    let mut registry = ModuleRegistry::new(cli.test).await?;
     let mut module_type = String::new();
     let mut module_name = String::new();
 
@@ -61,9 +56,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 // Install and register subnet module
                 let mut subnet_module = SubnetModule::new(url)?;
                 subnet_module.install().await?;
-                registry
-                    .register_module(module_name.clone(), module_type.clone())
-                    .await?;
                 println!(
                     "{} module installed and registered successfully",
                     module_name
@@ -78,21 +70,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 // Install and register inference module
                 let inference_module = InferenceModule::new(url)?;
                 inference_module.install().await?;
-                registry
-                    .register_module(module_name.clone(), module_type.clone())
-                    .await?;
                 println!(
                     "{} module installed and registered successfully",
                     module_name
                 );
-            }
-        }
-        Commands::List => {
-            // List all installed modules
-            let modules = registry.list_modules().await?;
-            println!("Installed modules:");
-            for (name, module_type) in modules {
-                println!("- {} ({})", name, module_type);
             }
         }
         Commands::RunInference { name, input } => {
@@ -112,11 +93,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 Ok(result) => println!("Inference result: {}", result),
                 Err(e) => println!("Error running inference: {}", e),
             }
-        }
-        Commands::Uninstall { name } => {
-            // Uninstall a module
-            registry.unregister_module(&name).await?;
-            println!("Module uninstalled successfully");
         }
         Commands::ParseConfig { name } => {
             let module_dir = PathBuf::from("subnets").join(name);

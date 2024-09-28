@@ -7,6 +7,8 @@ use std::process::Command;
 use std::error::Error;
 use std::env;
 use std::collections::HashMap;
+use std::io::{BufRead, BufReader};
+use std::process::{Stdio};
 
 /// Represents a Python executor for running Python code in a specific environment.
 pub struct PythonExecutor {
@@ -92,7 +94,9 @@ impl PythonExecutor {
         };
 
         command.args([&args])
-               .current_dir(&self.active_module_dir);
+               .current_dir(&self.active_module_dir)
+               .stdout(Stdio::piped())
+               .stderr(Stdio::piped());
 
         if let Some(env_vars) = &self.stored_env {
             for (key, value) in env_vars {
@@ -103,15 +107,44 @@ impl PythonExecutor {
             println!("Debug: No stored environment variables found");
         }
 
-        let output = command.output()?;
-        println!("Command exit status: {}", output.status);
-        println!("Command stdout: {}", String::from_utf8_lossy(&output.stdout));
-        println!("Command stderr: {}", String::from_utf8_lossy(&output.stderr));
+        let mut child = command.spawn()?;
 
-        if output.status.success() {
-            Ok(String::from_utf8(output.stdout)?)
+        let stdout = child.stdout.take().expect("Failed to capture stdout");
+        let stderr = child.stderr.take().expect("Failed to capture stderr");
+
+        let mut output = String::new();
+
+        // Read stdout in a separate thread
+        let stdout_thread = std::thread::spawn(move || {
+            let reader = BufReader::new(stdout);
+            for line in reader.lines() {
+                if let Ok(line) = line {
+                    println!("stdout: {}", line);
+                    output.push_str(&line);
+                    output.push('\n');
+                }
+            }
+            output
+        });
+
+        // Read stderr in the main thread
+        let reader = BufReader::new(stderr);
+        for line in reader.lines() {
+            if let Ok(line) = line {
+                eprintln!("stderr: {}", line);
+            }
+        }
+
+        // Wait for the command to finish and get the exit status
+        let status = child.wait()?;
+
+        // Collect stdout from the thread
+        let stdout_output = stdout_thread.join().expect("Failed to join stdout thread");
+
+        if status.success() {
+            Ok(stdout_output)
         } else {
-            Err(format!("Failed to run inference: {}", String::from_utf8_lossy(&output.stderr)).into())
+            Err(format!("Command failed with exit code: {}", status).into())
         }
     }
 

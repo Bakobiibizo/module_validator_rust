@@ -6,6 +6,8 @@
 use sqlx::postgres::{PgPool, PgRow};
 use sqlx::Row;
 use std::error::Error as StdError;
+use dotenv::dotenv;
+use std::env;
 
 /// Represents a connection to the database and provides database operations.
 pub struct Database {
@@ -17,13 +19,20 @@ impl Database {
     ///
     /// # Arguments
     ///
-    /// * `database_url` - The URL of the database to connect to.
+    /// * `is_test` - A boolean flag indicating whether to use the test database URL.
     ///
     /// # Returns
     ///
     /// A Result containing the Database if successful, or an error if the connection fails.
-    pub async fn new(database_url: &str) -> Result<Self, Box<dyn StdError>> {
-        let pool = PgPool::connect(database_url).await?;
+    pub async fn new(is_test: bool) -> Result<Self, Box<dyn StdError>> {
+        dotenv().ok(); // Load .env file, ignoring errors if file doesn't exist
+
+        let env_var_name = if is_test { "TEST_DATABASE_URL" } else { "DATABASE_URL" };
+        let database_url = env::var(env_var_name)
+            .or_else(|_| env::var("DATABASE_URL")) // Fallback to DATABASE_URL if TEST_DATABASE_URL is not set
+            .unwrap_or_else(|_| "postgres://localhost/default_db".to_string()); // Default URL
+
+        let pool = PgPool::connect(&database_url).await?;
 
         // Create the modules table if it doesn't exist
         sqlx::query(

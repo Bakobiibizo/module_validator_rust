@@ -10,6 +10,10 @@ use clap::{Parser, Subcommand};
 pub struct Cli {
     #[clap(subcommand)]
     pub command: Commands,
+
+    /// Use test database
+    #[clap(long, global = true)]
+    pub test: bool,
 }
 
 /// Enumerates the available commands for the Module Validator CLI.

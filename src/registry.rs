@@ -18,13 +18,13 @@ impl ModuleRegistry {
     ///
     /// # Arguments
     ///
-    /// * `database_url` - The URL of the database to connect to.
+    /// * `is_test` - A boolean flag indicating whether to use the test database.
     ///
     /// # Returns
     ///
     /// A Result containing the ModuleRegistry if successful, or an error if the database connection fails.
-    pub async fn new(database_url: &str) -> Result<Self, Box<dyn StdError>> {
-        let db = Database::new(database_url).await?;
+    pub async fn new(is_test: bool) -> Result<Self, Box<dyn StdError>> {
+        let db = Database::new(is_test).await?;
 
         Ok(Self {
             db,

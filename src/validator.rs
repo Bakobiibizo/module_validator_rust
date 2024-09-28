@@ -9,11 +9,10 @@ use crate::inference::python_executor::PythonExecutor;
 
 /// Represents a validator for subnet modules.
 pub struct Validator {
-    subnet_name: String,
-    #[allow(dead_code)]
-    env_dir: PathBuf,
-    module_dir: PathBuf,
-    validator_path: Option<PathBuf>,
+    pub subnet_name: String,
+    pub env_dir: PathBuf,
+    pub module_dir: PathBuf,
+    pub validator_path: Option<PathBuf>,
 }
 
 impl Validator {
@@ -61,7 +60,7 @@ impl Validator {
     /// # Returns
     ///
     /// A Result indicating success or failure of finding the validator script.
-    fn find_validator_script(&mut self) -> Result<(), Box<dyn Error>> {
+    pub fn find_validator_script(&mut self) -> Result<(), Box<dyn Error>> {
         println!("Finding validator script in: {:?}", self.module_dir);
         fn find_script(module_dir: &PathBuf) -> Option<PathBuf> {
             if let Ok(entries) = fs::read_dir(module_dir) {

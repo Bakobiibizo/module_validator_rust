@@ -14,6 +14,7 @@ pub mod utils;
 pub mod modules;
 pub mod inference;
 pub mod validator;
+pub mod cli;
 pub use config::Config;
 pub use registry::ModuleRegistry;
 pub use crate::modules::inference_module::InferenceModule;

@@ -4,7 +4,7 @@ use tokio;
 
 async fn setup_test_db() -> Database {
     let database_url = "postgres://user:pass@localhost/testdb";
-    Database::new(database_url).await.unwrap()
+    Database::new(true).await.unwrap()
 }
 
 #[tokio::test]

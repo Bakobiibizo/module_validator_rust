@@ -35,11 +35,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Parse command-line arguments
     let cli = Cli::parse();
 
-    // Get database URL from environment variable
-    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-
-    // Initialize the module registry
-    let mut registry = ModuleRegistry::new(&database_url).await?;
+    // Initialize the module registry with the test flag
+    let mut registry = ModuleRegistry::new(cli.test).await?;
     let mut module_type = String::new();
     let mut module_name = String::new();
 
@@ -118,7 +115,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         Commands::Uninstall { name } => {
             // Uninstall a module
-            registry.unregister_module(name).await?;
+            registry.unregister_module(&name).await?;
             println!("Module uninstalled successfully");
         }
         Commands::ParseConfig { name } => {
@@ -154,7 +151,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             let mut validator = Validator::new(&name).unwrap();
 
             validator.identify_and_prepare_inference(&args)?;
-            let output = validator.launch(if args.is_empty() { None } else { Some(args) })?;
+            let output = validator.launch(if args.is_empty() { None } else { Some(&args) })?;
             println!("Validator output: {:?}", output);
         }
     }

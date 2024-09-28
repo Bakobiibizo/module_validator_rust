@@ -61,6 +61,9 @@ echo "Database setup completed successfully."
 # Generate config.yaml
 cat > config.yaml << EOF
 database_url: "postgres://$DB_USER:$DB_PASSWORD@localhost/$DB_NAME"
+database_name: $DB_NAME
+database_user: $DB_USER
+database_password: $DB_PASSWORD
 modules: []
 EOF
 
@@ -69,6 +72,9 @@ echo "config.yaml file created successfully."
 # Update .env file
 cat > .env << EOF
 DATABASE_URL="postgres://$DB_USER:$DB_PASSWORD@localhost/$DB_NAME"
+DATABASE_NAME=$DB_NAME
+DATABASE_USER=$DB_USER
+DATABASE_PASSWORD=$DB_PASSWORD
 EOF
 
 echo ".env file updated successfully."

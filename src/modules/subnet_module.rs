@@ -5,6 +5,8 @@ use std::path::{Path, PathBuf};
 use std::collections::HashSet;
 use dialoguer::{MultiSelect, Confirm};
 use crate::modules::inference_module::InferenceModule;
+use std::io::{BufRead, BufReader};
+use std::process::Stdio;
 
 /// Represents a subnet module that can be installed and managed.
 pub struct SubnetModule {
@@ -58,80 +60,49 @@ impl SubnetModule {
 
         let module_dir = PathBuf::from("subnets").join(&self.name);
 
-        // Check if the module is already installed
         if module_dir.exists() {
             println!("Subnet module {} is already installed.", self.name);
             return Ok(());
         }
 
-        // Create a new environment for the subnet
         let env_dir = PathBuf::from(format!(".{}", self.name));
-        Command::new("python")
-            .args(&["-m", "venv", env_dir.to_str().unwrap()])
-            .output()?;
+        self.run_command_with_output("python", &["-m", "venv", env_dir.to_str().unwrap()])?;
 
-        // Get the Python executable path from the virtual environment
         let python_executable = self.get_venv_python(&env_dir)?;
 
-        // Clone the repository
-        let output = Command::new("git")
-            .args(&["clone", &self.url, &module_dir.to_string_lossy()])
-            .output()?;
-
-        if !output.status.success() {
-            let error = String::from_utf8_lossy(&output.stderr);
-            return Err(format!("Failed to clone repository: {}", error).into());
-        }
+        self.run_command_with_output("git", &["clone", &self.url, &module_dir.to_string_lossy()])?;
 
         println!("Repository cloned successfully");
 
-        // Run setup script if it exists
         let setup_script = module_dir.join("setup.sh");
-        if setup_script.exists() {
-            println!("Running setup script");
-            let output = Command::new("bash")
-                .arg(&setup_script)
-                .current_dir(&module_dir)
-                .output()?;
-
-            if !output.status.success() {
-                let error = String::from_utf8_lossy(&output.stderr);
-                return Err(format!("Failed to run setup script: {}", error).into());
+        match setup_script.exists() {
+            true => {
+                println!("Running setup script");
+                self.run_command_with_output("bash", &[setup_script.to_str().unwrap()])?;
+                println!("Setup script executed successfully");
             }
-
-            println!("Setup script executed successfully");
+            false => {
+                println!("No setup script found");
+            }
         }
 
-        // Install Python requirements if requirements.txt exists
         let requirements_file = module_dir.join("requirements.txt");
-        if requirements_file.exists() {
-            println!("Installing Python requirements");
-            let output = Command::new(&python_executable)
-                .args(&["-m", "pip", "install", "-r", "requirements.txt"])
-                .current_dir(&module_dir)
-                .output()?;
-
-            if !output.status.success() {
-                let error = String::from_utf8_lossy(&output.stderr);
-                return Err(format!("Failed to install Python requirements: {}", error).into());
+        match self.run_command_with_output(&python_executable.to_path_buf().to_str().unwrap(), &["-m", "pip", "install", "-r", requirements_file.to_str().unwrap()]) {
+            Ok(_) => println!("Python requirements installed successfully"),
+            Err(e) => {
+                eprintln!("Warning: Failed to install Python requirements: {}", e);
+                println!("Continuing with installation process...");
             }
-
-            println!("Python requirements installed successfully");
         }
 
-        // Install the package in editable mode
         println!("Installing package in editable mode");
-        let output = Command::new(&python_executable)
-            .args(&["-m", "pip", "install", "-e", "."])
-            .current_dir(&module_dir)
-            .output()?;
-
-        if !output.status.success() {
-            let error = String::from_utf8_lossy(&output.stderr);
-            return Err(format!("Failed to install package in editable mode: {}", error).into());
+        match self.run_command_with_output(&python_executable.to_path_buf().to_str().unwrap(), &["-m", "pip", "install", "-e", "."]) {
+            Ok(_) => println!("Package installed in editable mode successfully"),
+            Err(e) => {
+                eprintln!("Warning: Failed to install package in editable mode: {}", e);
+                println!("Continuing with installation process...");
+            }
         }
-
-        println!("Package installed in editable mode successfully");
 
         self.prompt_for_inference_modules().await?;
 
@@ -213,5 +184,43 @@ impl SubnetModule {
         }
     
         Ok(())
+    }
+
+    fn run_command_with_output(&self, command: &str, args: &[&str]) -> Result<(), Box<dyn Error>> {
+        let mut child = Command::new(command)
+            .args(args)
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()?;
+
+        let stdout = child.stdout.take().expect("Failed to open stdout");
+        let stderr = child.stderr.take().expect("Failed to open stderr");
+
+        let stdout_reader = BufReader::new(stdout);
+        let stderr_reader = BufReader::new(stderr);
+
+        std::thread::spawn(move || {
+            stdout_reader.lines().for_each(|line| {
+                if let Ok(line) = line {
+                    println!("{}", line);
+                }
+            });
+        });
+
+        std::thread::spawn(move || {
+            stderr_reader.lines().for_each(|line| {
+                if let Ok(line) = line {
+                    eprintln!("{}", line);
+                }
+            });
+        });
+
+        let status = child.wait()?;
+
+        if status.success() {
+            Ok(())
+        } else {
+            Err(format!("Command failed with exit code: {}", status).into())
+        }
     }
 }

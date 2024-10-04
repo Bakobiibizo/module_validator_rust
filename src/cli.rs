@@ -40,4 +40,15 @@ pub enum Commands {
         #[clap(default_value = "")]
         args: String,
     },
+    /// Launch a miner for a subnet module
+    LaunchMiner {
+        /// Name of the subnet module to launch miner for
+        name: String,
+        /// Arguments to pass to the miner (optional)
+        #[clap(default_value = "")]
+        args: String,
+    },
+    
+    /// Start the Translation API
+    StartTranslationAPI,
 }

@@ -8,7 +8,7 @@ use std::error::Error;
 use std::env;
 use std::collections::HashMap;
 use std::io::{BufRead, BufReader};
-use std::process::{Stdio};
+use std::process::Stdio;
 
 /// Represents a Python executor for running Python code in a specific environment.
 pub struct PythonExecutor {

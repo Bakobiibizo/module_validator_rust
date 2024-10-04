@@ -47,7 +47,6 @@ impl Validator {
     /// # Returns
     ///
     /// A Result containing the PathBuf of the validator script if successful, or an error if the operation
-    #[allow(dead_code)]
     pub fn prompt_user_for_path(&self) -> Result<PathBuf, Box<dyn Error>> {
         let mut validator_path = String::new();
         println!("Enter the path to the validator script: ");
@@ -76,8 +75,8 @@ impl Validator {
                             return Some(found_path);
                         }
                     }
-                }
-            }
+                } 
+            } 
             None
         }
 
@@ -85,7 +84,9 @@ impl Validator {
             self.validator_path = Some(script_path);
             Ok(())
         } else {
-            Err("Could not find the validator script".into())
+            let somepath = self.prompt_user_for_path()?;
+            self.validator_path = Some(somepath);
+            Ok(())
         }
     }
 

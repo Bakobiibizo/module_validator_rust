@@ -10,17 +10,20 @@ mod inference;
 mod modules;
 mod utils;
 mod validator;
+mod miner;
 
 use cli::{Cli, Commands};
 use dotenv::dotenv;
 use std::path::Path;
 use std::path::PathBuf;
 
+use crate::miner::Miner;
 use crate::config_parser::ConfigParser;
 use crate::inference::python_executor::{activate_env, PythonExecutor};
 use crate::modules::inference_module::InferenceModule;
 use crate::modules::subnet_module::SubnetModule;
 use crate::validator::Validator;
+use crate::inference::translation::TranslationAPI;
 
 /// Main entry point for the Module Validator application.
 #[tokio::main]
@@ -129,6 +132,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             validator.identify_and_prepare_inference(&args)?;
             let output = validator.launch(if args.is_empty() { None } else { Some(&args) })?;
             println!("Validator output: {:?}", output);
+        }
+        Commands::LaunchMiner { name, args } => {
+            let mut miner = Miner::new(&name).unwrap();
+
+            miner.identify_and_prepare_inference(&args)?;
+            let output = miner.launch(if args.is_empty() { None } else { Some(&args) })?;
+            println!("Miner output: {:?}", output);
+        }
+        Commands::StartTranslationAPI => {
+            let mut translation_api = TranslationAPI::new();
+            translation_api.start_with_pm2()?;
         }
     }
     Ok(())

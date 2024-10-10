@@ -11,6 +11,9 @@ mod modules;
 mod utils;
 mod validator;
 mod miner;
+mod proxy;
+mod api;
+use crate::api::API;
 
 use cli::{Cli, Commands};
 use dotenv::dotenv;
@@ -143,6 +146,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Commands::StartTranslationAPI => {
             let mut translation_api = TranslationAPI::new();
             translation_api.start_with_pm2()?;
+        }
+        Commands::LaunchProxy { ip, port, target_url } => {
+            let proxy = proxy::Proxy::new(ip.to_string(), *port, target_url.to_string());
+            proxy.run().await?;
+        }
+        Commands::StartAPI { port } => {
+            API::start("127.0.0.1".to_string(), *port).await?;
         }
     }
     Ok(())

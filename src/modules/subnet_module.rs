@@ -104,7 +104,7 @@ impl SubnetModule {
             }
         }
 
-        self.prompt_for_inference_modules().await?;
+        // self.prompt_for_inference_modules().await?;
 
         println!("Subnet module installed successfully");
         Ok(())
@@ -124,7 +124,6 @@ impl SubnetModule {
             Err(format!("Python executable not found in virtual environment: {:?}", python_path).into())
         }
     }
-
     /// Prompts the user to select required inference modules.
     ///
     /// This function displays a multi-select menu for the user to choose from a list of available inference modules.

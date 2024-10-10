@@ -51,4 +51,21 @@ pub enum Commands {
     
     /// Start the Translation API
     StartTranslationAPI,
+
+    /// Launch a proxy
+    LaunchProxy {
+        /// IP address to bind the proxy to
+        ip: String,
+        /// Port to bind the proxy to
+        port: u16,
+        /// Base URL to forward requests to
+        target_url: String,
+    },
+    
+    /// Start the API server
+    StartAPI {
+        /// Port to run the API server on
+        #[clap(short, long, default_value = "8000")]
+        port: u16,
+    },
 }

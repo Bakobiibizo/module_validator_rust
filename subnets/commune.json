@@ -1,0 +1,84 @@
+{
+    "subnets": [
+        {
+            "name": "communex",
+            "path": "https://github.com/renlabs/communex"
+        },
+        {
+            "name": "commune",
+            "path": "https://github.com/commune-ai/commune"
+        },
+        {
+            "name": "eden-subnet",
+            "path": "https://github.com/agent-artificial/eden-subnet"
+        },
+        {
+            "name": "synthia",
+            "path": "https://github.com/renlabs/synthia"
+        },
+        {
+            "name": "mosaic-subnet",
+            "path": "https://github.com/mosaicx-org/mosaic-subnet"
+        },
+        {
+            "name": "openscope",
+            "path": "https://github.com/Open0xScope/openscope"
+        },
+        {
+            "name": "kaiwa-subnet",
+            "path": "https://github.com/kaiwa-dev/kaiwa-subnet"
+        },
+        {
+            "name": "comtensor-subnet",
+            "path": "https://github.com/Comtensor/comtensor-subnet"
+        },
+        {
+            "name": "nya-compute-subnet",
+            "path": "https://github.com/nakamoto-ai/nya-compute-subnet"
+        },
+        {
+            "name": "prediction-subnet",
+            "path": "https://github.com/panthervis/prediction-subnet"
+        },
+        {
+            "name": "zangief",
+            "path": "https://github.com/nakamoto-ai/zangief.git"
+        },
+        {
+            "name": "comchat-subnet",
+            "path": "https://github.com/smart-window/comchat-subnet.git"
+        },
+        {
+            "name": "marketcompass-subnet",
+            "path": "https://github.com/MarketCompassDev/marketcompass-subnet"
+        },
+        {
+            "name": "yogpt",
+            "path": "https://github.com/bigideainc/yogptv1.git",
+        },
+        {
+            "name": "dtune",
+            "path": "https://github.com/bit-current/dtune.git"
+        },
+        {
+            "name": "yama",
+            "path": "https://github.com/nakamoto-ai/yama"
+        },
+        {
+            "name": "sylliba-subnet",
+            "path": "https://github.com/renlabs/sylliba-subnet"
+        },
+        {
+            "name": "vision",
+            "path": "https://github.com/NUMENEX/numx-subnet-commune"
+        },
+        {
+            "name": "blockchain-insights-subnet",
+            "path": "https://github.com/blockchain-insights/blockchain-insights-subnet.git"
+        },
+        {
+            "name": "moonshoot-subnet",
+            "path": "https://github.com/moonsht/moonshoot-subnet"
+        }
+    ]
+}

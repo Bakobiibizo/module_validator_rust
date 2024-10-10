@@ -22,3 +22,5 @@ clap = { version = "3.0", features = ["derive"] }
 regex = "1.5"
 dialoguer = "0.10"
 tempfile = "3.8.1"
+hyper = { version = "0.14", features = ["full"] }
+actix-web = "4.0"

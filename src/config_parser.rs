@@ -147,7 +147,7 @@ impl ConfigParser {
 
             config.commands.insert(command_name, command_config);
         }
-        Self::prompt_for_env_vars(config)?;
+        // Self::prompt_for_env_vars(config)?;
 
         println!("Finished parsing file: {:?}", file_path);
         Ok(())

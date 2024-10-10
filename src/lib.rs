@@ -14,6 +14,8 @@ pub mod inference;
 pub mod validator;
 pub mod miner;
 pub mod cli;
+pub mod proxy;
+pub mod api;
 
 pub use config::Config;
 pub use crate::modules::inference_module::InferenceModule;

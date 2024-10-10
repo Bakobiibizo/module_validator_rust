@@ -87,7 +87,7 @@ impl InferenceModule {
             fs::create_dir_all(&module_dir)?;
 
             let url = format!(
-                "https://registrar-agentartificial.ngrok.dev/modules/{}",
+                "https://registrar-cellium.ngrok.dev/modules/{}",
                 self.name
             );
             let response = reqwest::get(&url).await?.text().await?;

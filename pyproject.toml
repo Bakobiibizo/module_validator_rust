@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "module-validator-rust"
+version = "0.1.0"
+description = "Modular validator for substrate block chain validation"
+authors = ["Richard <bakobiibizo@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+fastapi = "^0.115.0"
+httpx = "^0.27.2"
+uvicorn = "^0.31.0"
+loguru = "^0.7.2"
+python-dotenv = "^1.0.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

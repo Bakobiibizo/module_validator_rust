@@ -42,11 +42,11 @@
         },
         {
             "name": "zangief",
-            "path": "https://github.com/nakamoto-ai/zangief.git"
+            "path": "https://github.com/nakamoto-ai/zangief"
         },
         {
             "name": "comchat-subnet",
-            "path": "https://github.com/smart-window/comchat-subnet.git"
+            "path": "https://github.com/smart-window/comchat-subnet"
         },
         {
             "name": "marketcompass-subnet",
@@ -54,11 +54,11 @@
         },
         {
             "name": "yogpt",
-            "path": "https://github.com/bigideainc/yogptv1.git",
+            "path": "https://github.com/bigideainc/yogptv1"
         },
         {
             "name": "dtune",
-            "path": "https://github.com/bit-current/dtune.git"
+            "path": "https://github.com/bit-current/dtune"
         },
         {
             "name": "yama",
@@ -74,7 +74,7 @@
         },
         {
             "name": "blockchain-insights-subnet",
-            "path": "https://github.com/blockchain-insights/blockchain-insights-subnet.git"
+            "path": "https://github.com/blockchain-insights/blockchain-insights-subnet"
         },
         {
             "name": "moonshoot-subnet",

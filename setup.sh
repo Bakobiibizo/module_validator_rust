@@ -10,6 +10,7 @@ if ! command -v sudo &> /dev/null; then
 fi
 
 sudo apt-get update && sudo apt-get install -y postgresql
+sudo apt-get install -y python3 python3-venv python3-pip python-is-python3 git
 
 sudo chmod +x scripts/setup_database.sh
 

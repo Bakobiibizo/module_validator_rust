@@ -24,21 +24,17 @@ impl SubnetModule {
     /// # Arguments
     ///
     /// * `url` - The URL of the subnet module repository.
-    ///
+    /// * `name` - The name of the subnet module.
     /// # Returns
     ///
     /// * `Result<Self, Box<dyn Error>>` - Returns a SubnetModule instance if successful, or an error if the URL is invalid.
-    pub fn new(url: impl AsRef<str>) -> Result<Self, Box<dyn Error>> {
+    pub fn new(url: impl AsRef<str>, name: &str) -> Result<Self, Box<dyn Error>> {
         let url = url.as_ref();
         let parsed_url = Url::parse(url)?;
-        let name = parsed_url.path_segments()
-            .and_then(|segments| segments.last())
-            .ok_or("Invalid URL: cannot extract subnet name")?
-            .to_string();
 
         Ok(SubnetModule { 
-            name, 
-            url: url.to_string(),
+            name: name.to_string(), 
+            url: parsed_url.to_string(),
             required_inference_modules: HashSet::new(),
         })
     }
@@ -63,14 +59,16 @@ impl SubnetModule {
         if module_dir.exists() {
             println!("Subnet module {} is already installed.", self.name);
             return Ok(());
+        } else{
+            self.run_command_with_output("git", &["clone", &self.url, &module_dir.to_string_lossy()])?;
         }
 
         let env_dir = PathBuf::from(format!(".{}", self.name));
         self.run_command_with_output("python", &["-m", "venv", env_dir.to_str().unwrap()])?;
 
-        let python_executable = self.get_venv_python(&env_dir)?;
+        let python_executable = env_dir.join("bin").join("python");
 
-        self.run_command_with_output("git", &["clone", &self.url, &module_dir.to_string_lossy()])?;
+        
 
         println!("Repository cloned successfully");
 

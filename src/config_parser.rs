@@ -1,4 +1,4 @@
-use std::fs;
+use std::{fs, path::PrefixComponent};
 use std::path::Path;
 use std::error::Error;
 use regex::Regex;
@@ -51,11 +51,12 @@ impl ConfigParser {
         };
 
         // Parse .env file
-        let env_file = file_dir.join(".env.example");
-        println!("Checking for .env file: {:?}", env_file);
-        if env_file.exists() {
-            println!(".env file found, parsing...");
-            let env_content = fs::read_to_string(&env_file)?;
+        let env_example_file = file_dir.join(".env.example");
+        let env_file = file_dir.join(".env");
+        println!("Checking for .env file: {:?}", env_example_file);
+        if env_example_file.exists() {
+            println!(".env.example file found, parsing...");
+            let env_content = fs::read_to_string(&env_example_file)?;
             for line in env_content.lines() {
                 if let Some((key, value)) = line.split_once('=') {
                     config.env_vars.insert(key.trim().to_string(), value.trim().to_string());
@@ -63,7 +64,7 @@ impl ConfigParser {
                 }
             }
         } else {
-            println!(".env file not found");
+            println!(".env.example file not found");
         }
 
         // Parse Python files
@@ -81,6 +82,7 @@ impl ConfigParser {
         }
 
         println!("Parsing complete. Found {} env vars and {} commands", 
+
                  config.env_vars.len(), config.commands.len());
 
         Ok(config)

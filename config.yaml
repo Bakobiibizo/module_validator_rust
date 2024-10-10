@@ -1,5 +1,5 @@
-database_url: "postgres://"user":pass@localhost/testdb"
-database_name: testdb
-database_user: "user"
-database_password: pass
+database_url: "postgres://:@localhost/"
+database_name: 
+database_user: 
+database_password: 
 modules: []

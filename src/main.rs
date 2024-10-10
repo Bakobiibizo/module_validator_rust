@@ -60,7 +60,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             if module_type == "subnets" {
                 // Install and register subnet module
-                let mut subnet_module = SubnetModule::new(url)?;
+                let mut subnet_module = SubnetModule::new(url, &module_name)?;
                 subnet_module.install().await?;
                 println!(
                     "{} module installed and registered successfully",
@@ -70,7 +70,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 // Parse and configure module
                 let module_dir = Path::new(&module_type).join(&module_name);
                 let mut config = ConfigParser::parse_commands(&module_dir)?;
-                ConfigParser::prompt_for_env_vars(&mut config)?;
                 print_config(&config);
             } else {
                 // Install and register inference module

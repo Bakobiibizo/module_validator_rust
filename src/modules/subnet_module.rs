@@ -83,6 +83,15 @@ impl SubnetModule {
                 println!("No setup script found");
             }
         }
+        
+        println!("Installing package in editable mode");
+        match self.run_command_with_output(&python_executable.to_path_buf().to_str().unwrap(), &["-m", "pip", "install", "-e", "."]) {
+            Ok(_) => println!("Package installed in editable mode successfully"),
+            Err(e) => {
+                eprintln!("Warning: Failed to install package in editable mode: {}", e);
+                println!("Continuing with installation process...");
+            }
+        }
 
         let requirements_file = module_dir.join("requirements.txt");
         match self.run_command_with_output(&python_executable.to_path_buf().to_str().unwrap(), &["-m", "pip", "install", "-r", requirements_file.to_str().unwrap()]) {
@@ -93,14 +102,7 @@ impl SubnetModule {
             }
         }
 
-        println!("Installing package in editable mode");
-        match self.run_command_with_output(&python_executable.to_path_buf().to_str().unwrap(), &["-m", "pip", "install", "-e", "."]) {
-            Ok(_) => println!("Package installed in editable mode successfully"),
-            Err(e) => {
-                eprintln!("Warning: Failed to install package in editable mode: {}", e);
-                println!("Continuing with installation process...");
-            }
-        }
+
 
         // self.prompt_for_inference_modules().await?;
 

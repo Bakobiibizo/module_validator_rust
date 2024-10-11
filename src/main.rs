@@ -70,6 +70,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 // Parse and configure module
                 let module_dir = Path::new(&module_type).join(&module_name);
                 let mut config = ConfigParser::parse_commands(&module_dir)?;
+                ConfigParser::prompt_for_env_vars(&mut config)?;
+                ConfigParser::save_config(&config, &module_dir)?;
                 print_config(&config);
             } else {
                 // Install and register inference module

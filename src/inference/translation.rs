@@ -1,6 +1,6 @@
-use std::{borrow::BorrowMut, env, future::IntoFuture, mem, process::Command};
+use std::env;
 
-use crate::inference::python_executor::{self, PythonExecutor};
+use crate::inference::python_executor::{PythonExecutor};
 
 #[cfg(windows)]
 use winapi;
@@ -38,7 +38,7 @@ impl TranslationAPI {
     }
 
     pub fn start(&self) -> Result<(), Box<dyn std::error::Error>> {
-        use tokio::process::{Command, Child};
+        use tokio::process::Command;
         
 
         // Get the host and port from environment variables

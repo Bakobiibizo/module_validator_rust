@@ -1,4 +1,4 @@
-use std::{fs, path::PrefixComponent};
+use std::fs;
 use std::path::Path;
 use std::error::Error;
 use regex::Regex;
@@ -52,7 +52,6 @@ impl ConfigParser {
 
         // Parse .env file
         let env_example_file = file_dir.join(".env.example");
-        let env_file = file_dir.join(".env");
         println!("Checking for .env file: {:?}", env_example_file);
         if env_example_file.exists() {
             println!(".env.example file found, parsing...");

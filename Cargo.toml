@@ -24,3 +24,4 @@ dialoguer = "0.10"
 tempfile = "3.8.1"
 hyper = { version = "0.14", features = ["full"] }
 actix-web = "4.0"
+dirs = "5.0.1"
